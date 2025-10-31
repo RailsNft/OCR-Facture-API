@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: ocr-facture-api
+    env: python
+    buildCommand: pip install -r requirements.txt && apt-get update && apt-get install -y tesseract-ocr tesseract-ocr-fra tesseract-ocr-eng tesseract-ocr-deu tesseract-ocr-spa tesseract-ocr-ita tesseract-ocr-por
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: RAPIDAPI_PROXY_SECRET
+        sync: false
+      - key: DEBUG_MODE
+        value: "False"
+      - key: DEFAULT_LANGUAGE
+        value: "fra"
+
