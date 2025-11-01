@@ -13,6 +13,7 @@ import os
 import hashlib
 import json
 from datetime import datetime, timedelta
+from compliance import extract_compliance_data, detect_siren_siret, detect_vat_intracom, validate_vies, enrich_siren_siret, validate_french_vat
 try:
     import fitz  # PyMuPDF
     PDF_SUPPORT = True
@@ -160,6 +161,7 @@ class OCRResponse(BaseModel):
     extracted_data: Optional[dict] = None
     confidence_scores: Optional[dict] = None
     cached: Optional[bool] = False  # Indique si le résultat vient du cache
+    compliance: Optional[dict] = None  # Données de conformité FR (si demandé)
 
 
 class BatchOCRRequest(BaseModel):
@@ -1018,7 +1020,8 @@ async def health_check():
 @app.post("/ocr/upload", response_model=OCRResponse)
 async def upload_and_ocr(
     file: UploadFile = File(...),
-    language: str = Form("fra")
+    language: str = Form("fra"),
+    check_compliance: bool = Form(False)  # Nouveau paramètre pour vérifier la conformité FR
 ):
     """
     Upload une image de facture et extrait automatiquement les données structurées.
@@ -1403,6 +1406,113 @@ async def get_supported_languages():
             {"code": "por", "name": "Português"}
         ]
     }
+
+
+@app.post("/compliance/check")
+async def check_compliance_endpoint(
+    invoice_data: dict = Body(...)
+):
+    """
+    Vérifie la conformité d'une facture française
+    
+    **Paramètres:**
+    - `invoice_data`: Données extraites de la facture (format JSON)
+    
+    **Retourne:**
+    - Vérification compliance FR (mentions légales)
+    - Validation TVA FR
+    - Détection SIREN/SIRET
+    - Détection TVA intracom
+    - Enrichissement (si configuré)
+    """
+    try:
+        compliance_result = extract_compliance_data(invoice_data, invoice_data.get("text", ""))
+        return {
+            "success": True,
+            "compliance": compliance_result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/compliance/validate-vat")
+async def validate_vat_endpoint(
+    invoice_data: dict = Body(...)
+):
+    """
+    Valide les taux et calculs de TVA pour une facture française
+    
+    **Paramètres:**
+    - `invoice_data`: Données extraites avec montants HT, TTC, TVA
+    
+    **Retourne:**
+    - Validation des taux TVA (20%, 10%, 5.5%, 2.1%, 0%)
+    - Vérification des calculs
+    - Erreurs et avertissements
+    """
+    try:
+        validation_result = validate_french_vat(invoice_data)
+        return {
+            "success": True,
+            "validation": validation_result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/compliance/enrich-siret")
+async def enrich_siret_endpoint(
+    siret: str = Body(..., embed=True)
+):
+    """
+    Enrichit les données avec l'API Sirene (Insee) à partir d'un SIRET
+    
+    **Paramètres:**
+    - `siret`: Numéro SIRET (14 chiffres)
+    
+    **Retourne:**
+    - Raison sociale
+    - Adresse complète
+    - Forme juridique
+    - Date de création
+    - etc.
+    """
+    try:
+        enrichment_result = enrich_siren_siret(
+            siret,
+            siren_api_key=settings.sirene_api_key
+        )
+        return {
+            "success": True,
+            "enrichment": enrichment_result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/compliance/validate-vies")
+async def validate_vies_endpoint(
+    vat_number: str = Body(..., embed=True)
+):
+    """
+    Valide un numéro TVA intracommunautaire via l'API VIES
+    
+    **Paramètres:**
+    - `vat_number`: Numéro TVA intracom (ex: FR47945319300)
+    
+    **Retourne:**
+    - Validité du numéro
+    - Nom de l'entreprise
+    - Adresse
+    """
+    try:
+        vies_result = validate_vies(vat_number)
+        return {
+            "success": True,
+            "validation": vies_result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 if __name__ == "__main__":
