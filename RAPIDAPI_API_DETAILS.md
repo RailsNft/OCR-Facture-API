@@ -85,10 +85,10 @@ Generate Factur-X XML files (EN16931 standard) for e-invoicing compliance.
 
 ### 1. Subscribe to a Plan
 Choose the plan that fits your needs:
-- **Free**: 100 requests/month - Perfect for testing
-- **Basic**: $10/month - 500 requests/day
-- **Pro**: $30/month - 2000 requests/day
-- **Ultra**: $100/month - Unlimited requests
+- **Basic**: 100 requests/month - $0/month - Perfect for testing
+- **Pro**: 20,000 requests/month - $15/month - For small businesses
+- **Ultra**: 80,000 requests/month - $59/month - For medium businesses
+- **Mega**: 250,000 requests/month - $149/month - For large enterprises
 
 ### 2. Get Your API Key
 After subscribing, you'll receive your `X-RapidAPI-Proxy-Secret` in the dashboard.
@@ -225,10 +225,10 @@ Use the `/webhooks/salesforce` endpoint to create Invoice records directly in Sa
 ## Rate Limits
 
 Rate limits depend on your subscription plan:
-- **Free**: 100 requests/month
-- **Basic**: 500 requests/day
-- **Pro**: 2000 requests/day
-- **Ultra**: Unlimited
+- **Basic**: 100 requests/month - $0/month
+- **Pro**: 20,000 requests/month - $15/month
+- **Ultra**: 80,000 requests/month - $59/month
+- **Mega**: 250,000 requests/month - $149/month
 
 ## Best Practices
 
@@ -254,7 +254,7 @@ All plans include:
 - ✅ Webhook integrations
 - ✅ Result caching
 
-Start with the **Free plan** to test the API, then upgrade as your needs grow!
+Start with the **Basic plan** (100 requests/month - free) to test the API, then upgrade as your needs grow!
 
 ---
 
@@ -305,7 +305,7 @@ Optimized for French invoices, also supports English, German, Spanish, Italian, 
 
 ## Quick Start
 
-1. Subscribe to a plan (Free plan: 100 requests/month)
+1. Subscribe to a plan (Basic plan: 100 requests/month)
 2. Get your API key
 3. Upload an invoice image or PDF
 4. Receive structured JSON data instantly

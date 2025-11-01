@@ -160,28 +160,28 @@ curl --request POST \
 
 Dans la section **Pricing**, créez plusieurs plans:
 
-### Plan Free
-- **Name**: Free
-- **Price**: $0/month
-- **Rate Limit**: 10 requests/day
-- **Description**: Perfect for testing and small projects
-
 ### Plan Basic
 - **Name**: Basic
-- **Price**: $5/month
-- **Rate Limit**: 100 requests/day
-- **Description**: For small businesses and personal use
+- **Price**: $0/month
+- **Rate Limit**: 100 requests/month
+- **Description**: Perfect for testing and small projects
 
 ### Plan Pro
 - **Name**: Pro
-- **Price**: $20/month
-- **Rate Limit**: 1000 requests/day
-- **Description**: For growing businesses and applications
+- **Price**: $15/month
+- **Rate Limit**: 20,000 requests/month
+- **Description**: For small businesses and growing applications
 
-### Plan Enterprise
-- **Name**: Enterprise
-- **Price**: Custom
-- **Rate Limit**: Unlimited
+### Plan Ultra
+- **Name**: Ultra
+- **Price**: $59/month
+- **Rate Limit**: 80,000 requests/month
+- **Description**: For medium businesses and higher volumes
+
+### Plan Mega
+- **Name**: Mega
+- **Price**: $149/month
+- **Rate Limit**: 250,000 requests/month
 - **Description**: For large-scale applications and enterprises
 
 ## 📸 Étape 5: Ajouter des images et exemples

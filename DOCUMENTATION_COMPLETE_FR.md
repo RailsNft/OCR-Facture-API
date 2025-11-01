@@ -55,7 +55,7 @@ L'API OCR Facture France est un service professionnel qui permet d'extraire auto
 1. Allez sur [RapidAPI](https://rapidapi.com)
 2. Recherchez **"OCR Facture France"**
 3. Cliquez sur **"Subscribe"**
-4. Choisissez le plan **Free** (10 requêtes/jour) pour tester
+4. Choisissez le plan **Basic** (100 requêtes/mois - gratuit) pour tester
 5. Obtenez votre clé API dans le dashboard
 
 ### Étape 2 : Obtenir votre clé API

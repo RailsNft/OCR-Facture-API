@@ -183,7 +183,7 @@ J'en avais marre de saisir manuellement les factures pour la comptabilité. L'AP
 • Déployé sur Railway
 
 **Comment tester :**
-Plan gratuit disponible sur RapidAPI avec 10-20 requêtes/jour.
+Plan gratuit disponible sur RapidAPI avec 100 requêtes/mois.
 
 **Lien :** [Votre lien RapidAPI]
 
@@ -202,14 +202,14 @@ J'ai lancé OCR Facture API sur RapidAPI Marketplace.
 Les entreprises perdent énormément de temps à saisir manuellement les données de factures. Mon API automatise ce processus avec l'OCR.
 
 **Monétisation :**
-• Plan Free : 0€/mois (10-20 req/jour)
-• Plan Pro : 10€/mois (500 req/jour)
-• Plan Ultra : 30€/mois (2000 req/jour)
-• Plan Mega : 100€/mois (illimité)
+• Plan Basic : $0/mois (100 req/mois - gratuit)
+• Plan Pro : $15/mois (20k req/mois)
+• Plan Ultra : $59/mois (80k req/mois)
+• Plan Mega : $149/mois (250k req/mois)
 
 **Métriques après 1 semaine :**
 • 50+ vues
-• 5 abonnements (tous free pour l'instant)
+• 5 abonnements (tous Basic gratuit pour l'instant)
 • Feedback positif sur la qualité de l'extraction
 
 **Prochaines étapes :**
@@ -320,10 +320,10 @@ Client → RapidAPI → Railway → OCR Facture API → Tesseract OCR → Résul
 
 L'API est disponible sur RapidAPI avec plusieurs plans :
 
-- **Free** : 0€/mois - 10-20 requêtes/jour (parfait pour tester)
-- **Pro** : 10€/mois - 500 requêtes/jour (petites entreprises)
-- **Ultra** : 30€/mois - 2000 requêtes/jour (moyennes entreprises)
-- **Mega** : 100€/mois - Illimité (grandes entreprises)
+- **Basic (Gratuit)** : $0/mois - 100 requêtes/mois (parfait pour tester)
+- **Pro** : $15/mois - 20 000 requêtes/mois (petites entreprises)
+- **Ultra** : $59/mois - 80 000 requêtes/mois (moyennes entreprises)
+- **Mega** : $149/mois - 250 000 requêtes/mois (grandes entreprises)
 
 ## Leçons apprises
 

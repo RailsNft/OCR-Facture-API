@@ -1,6 +1,7 @@
 """
 Rate Limiting intelligent pour l'API OCR Facture
 Gère les quotas par plan, par IP, et par clé API
+Support Redis pour scalabilité
 """
 
 from typing import Optional, Dict, Tuple
@@ -8,6 +9,18 @@ from datetime import datetime, timedelta
 from fastapi import Request, HTTPException
 from fastapi.responses import JSONResponse
 import hashlib
+import json
+
+# Tentative d'import Redis
+try:
+    import redis
+    REDIS_AVAILABLE = True
+except ImportError:
+    REDIS_AVAILABLE = False
+
+# Cache mémoire de fallback pour rate limiting
+rate_limit_cache: Dict[str, Dict] = {}
+_redis_client: Optional[redis.Redis] = None
 
 
 # Limites par plan (requêtes par mois)
@@ -41,8 +54,66 @@ IP_LIMITS = {
     "per_day": 1000,   # Max 1000 requêtes/jour par IP
 }
 
-# Cache pour stocker les compteurs (en production, utiliser Redis)
-rate_limit_cache: Dict[str, Dict] = {}
+
+def init_rate_limit_redis(redis_url: Optional[str] = None, redis_db: int = 0):
+    """
+    Initialise Redis pour le rate limiting (optionnel)
+    
+    Args:
+        redis_url: URL Redis (ex: redis://localhost:6379)
+        redis_db: Numéro de base de données Redis
+    """
+    global _redis_client
+    
+    if not REDIS_AVAILABLE:
+        return False
+    
+    if not redis_url:
+        return False
+    
+    try:
+        _redis_client = redis.from_url(redis_url, db=redis_db, decode_responses=True)
+        _redis_client.ping()
+        return True
+    except Exception:
+        _redis_client = None
+        return False
+
+
+def _get_rate_limit_counter(cache_key: str) -> Optional[Dict]:
+    """Récupère un compteur depuis Redis ou mémoire"""
+    if _redis_client:
+        try:
+            data = _redis_client.get(cache_key)
+            if data:
+                return json.loads(data)
+        except Exception:
+            pass
+    
+    # Fallback mémoire
+    return rate_limit_cache.get(cache_key)
+
+
+def _set_rate_limit_counter(cache_key: str, counter_data: Dict, ttl_seconds: Optional[int] = None):
+    """Stocke un compteur dans Redis ou mémoire"""
+    if _redis_client and ttl_seconds:
+        try:
+            _redis_client.setex(cache_key, ttl_seconds, json.dumps(counter_data))
+            return
+        except Exception:
+            pass
+    
+    # Fallback mémoire
+    rate_limit_cache[cache_key] = counter_data
+    
+    # Nettoyer le cache mémoire si trop grand
+    if len(rate_limit_cache) > 10000:
+        expired_keys = [
+            k for k, v in rate_limit_cache.items()
+            if datetime.fromisoformat(v.get("reset_time", "2000-01-01")) < datetime.now()
+        ]
+        for k in expired_keys[:1000]:
+            del rate_limit_cache[k]
 
 
 def get_client_identifier(request: Request) -> str:
@@ -120,8 +191,11 @@ def check_rate_limit(
     
     # Récupérer les compteurs actuels
     now = datetime.now()
-    if cache_key in rate_limit_cache:
-        counter_data = rate_limit_cache[cache_key]
+    
+    # Récupérer depuis Redis ou mémoire
+    counter_data = _get_rate_limit_counter(cache_key)
+    
+    if counter_data:
         reset_time = datetime.fromisoformat(counter_data["reset_time"])
         
         # Si la fenêtre est expirée, réinitialiser
@@ -141,8 +215,9 @@ def check_rate_limit(
             "first_request": now.isoformat()
         }
     
-    # Sauvegarder dans le cache
-    rate_limit_cache[cache_key] = counter_data
+    # Sauvegarder dans Redis ou mémoire avec TTL
+    ttl_seconds = int(window.total_seconds())
+    _set_rate_limit_counter(cache_key, counter_data, ttl_seconds)
     
     # Nettoyer le cache si trop grand (garder seulement les 10000 dernières entrées)
     if len(rate_limit_cache) > 10000:
@@ -194,8 +269,10 @@ def check_ip_rate_limit(request: Request) -> Tuple[bool, Optional[Dict]]:
         cache_key = f"ip:{client_ip}:{period}"
         now = datetime.now()
         
-        if cache_key in rate_limit_cache:
-            counter_data = rate_limit_cache[cache_key]
+        # Récupérer depuis Redis ou mémoire
+        counter_data = _get_rate_limit_counter(cache_key)
+        
+        if counter_data:
             reset_time = datetime.fromisoformat(counter_data["reset_time"])
             
             if now >= reset_time:
@@ -211,7 +288,9 @@ def check_ip_rate_limit(request: Request) -> Tuple[bool, Optional[Dict]]:
                 "reset_time": (now + window).isoformat()
             }
         
-        rate_limit_cache[cache_key] = counter_data
+        # Sauvegarder avec TTL
+        ttl_seconds = int(window.total_seconds())
+        _set_rate_limit_counter(cache_key, counter_data, ttl_seconds)
         
         # Vérifier limite
         if counter_data["count"] > limit:
@@ -308,10 +387,19 @@ async def rate_limit_middleware(request: Request, call_next):
     # Appeler le handler suivant
     response = await call_next(request)
     
-    # Ajouter les headers de rate limiting à la réponse
-    rate_limit_headers = get_rate_limit_headers(rate_limit_info)
-    for key, value in rate_limit_headers.items():
-        response.headers[key] = value
+    # Ajouter les headers de rate limiting à la réponse (mensuel)
+    if rate_limit_info:
+        rate_limit_headers = get_rate_limit_headers(rate_limit_info)
+        for key, value in rate_limit_headers.items():
+            response.headers[key] = value
+    
+    # Ajouter aussi les headers quotidiens
+    if daily_info:
+        daily_headers = get_rate_limit_headers(daily_info)
+        # Préfixer avec Daily- pour différencier
+        response.headers["X-RateLimit-Daily-Limit"] = daily_headers["X-RateLimit-Limit"]
+        response.headers["X-RateLimit-Daily-Remaining"] = daily_headers["X-RateLimit-Remaining"]
+        response.headers["X-RateLimit-Daily-Reset"] = daily_headers["X-RateLimit-Reset"]
     
     return response
 

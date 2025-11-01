@@ -31,10 +31,10 @@
 
 ---
 
-### 3. Vérifier/Ajuster le plan Free
+### 3. Vérifier/Ajuster le plan Basic
 - [ ] Settings → Pricing
-- [ ] Vérifier que le plan "Free" existe
-- [ ] Modifier le quota à : **100 requêtes/mois** (pas par jour)
+- [ ] Vérifier que le plan "Basic" existe
+- [ ] Modifier le quota à : **100 requêtes/mois** (gratuit)
 - [ ] Description : "100 requêtes/mois pour tester l'API"
 - [ ] Sauvegarder
 
@@ -204,7 +204,7 @@ Avant de considérer l'optimisation terminée :
 
 - [ ] Nom optimisé avec tous les mots-clés
 - [ ] 8-10 tags pertinents ajoutés
-- [ ] Plan Free avec 100-500 req/mois
+- [ ] Plan Basic avec 100 req/mois (gratuit)
 - [ ] 3-5 screenshots ajoutés
 - [ ] Tutoriel RapidAPI créé
 - [ ] Catégories optimisées

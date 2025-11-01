@@ -252,10 +252,10 @@ curl -X POST "https://ocr-facture-api-production.up.railway.app/facturx/generate
 
 ## 📊 Tarification
 
-- **Free** : 10 requêtes/jour - Parfait pour tester
-- **Basic** : 49€/mois - 2000 requêtes/mois - Pour startups
-- **Pro** : 149€/mois - 10 000 requêtes/mois - Pour PME
-- **Enterprise** : Sur mesure - >50k requêtes/mois - Pour grandes entreprises
+- **Basic (Gratuit)** : 100 requêtes/mois - Parfait pour tester
+- **Pro** : 20 000 requêtes/mois - $15/mois - Pour petites entreprises
+- **Ultra** : 80 000 requêtes/mois - $59/mois - Pour PME
+- **Mega** : 250 000 requêtes/mois - $149/mois - Pour grandes entreprises
 
 ---
 
@@ -292,7 +292,7 @@ Optimisé pour le français, support également :
 
 1. **S'abonner** à l'API sur RapidAPI
 2. **Obtenir votre clé API** dans le dashboard
-3. **Tester** avec le plan Free (10 req/jour)
+3. **Tester** avec le plan Basic (100 req/mois - gratuit)
 4. **Intégrer** dans votre application
 
 **Prêt à automatiser votre traitement de factures ?** Abonnez-vous maintenant et commencez à extraire des données en quelques minutes ! 🚀
@@ -364,7 +364,7 @@ Cette API permet d'extraire automatiquement les données structurées de vos fac
 
 1. Allez sur RapidAPI et cherchez "OCR Facture France"
 2. Cliquez sur "Subscribe"
-3. Choisissez le plan Free (10 requêtes/jour) pour tester
+3. Choisissez le plan Basic (100 requêtes/mois - gratuit) pour tester
 4. Obtenez votre clé API dans le dashboard
 
 ## Étape 2 : Votre première extraction

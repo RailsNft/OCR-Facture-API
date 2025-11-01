@@ -40,17 +40,17 @@ ocr, invoice, facturx, pdf, json, france, documents, accounting, finance, factur
 
 ---
 
-### ✅ Plan Free
+### ✅ Plan Basic
 **Actuel** : À vérifier dans Pricing  
 **Recommandé** : 
-- **Free** : 100-500 requêtes/mois (pas 10/jour)
+- **Basic** : 100 requêtes/mois (gratuit)
 - Visible avec le filtre "Show APIs with Free tier"
 
 **Score** : ⚠️ À vérifier
 
 **Action** : 
-1. Vérifier que le plan Free existe
-2. Augmenter le quota à **100-500 req/mois** (pas par jour)
+1. Vérifier que le plan Basic existe
+2. Configurer le quota à **100 req/mois** (gratuit)
 3. S'assurer qu'il est activé et visible
 
 ---
@@ -120,7 +120,7 @@ ocr, invoice, facturx, pdf, json, france, documents, accounting, finance, factur
 | Nom SEO | ⚠️ 6/10 | 🔴 Haute |
 | Catégorie | ⚠️ ?/10 | 🟡 Moyenne |
 | Tags | ⚠️ ?/10 | 🔴 Haute |
-| Free Plan | ⚠️ ?/10 | 🔴 Haute |
+| Basic Plan | ⚠️ ?/10 | 🔴 Haute |
 | Uptime | ⚠️ ?/10 | 🟡 Moyenne |
 | Documentation | ⚠️ 5/10 | 🔴 Haute |
 | Screenshots | ⚠️ ?/10 | 🟡 Moyenne |
@@ -136,7 +136,7 @@ ocr, invoice, facturx, pdf, json, france, documents, accounting, finance, factur
 
 1. **Renommer l'API** : `OCR Facture FR → JSON + Factur-X`
 2. **Ajouter les tags** : ocr, invoice, facturx, pdf, json, france, documents, accounting, finance
-3. **Vérifier/Ajuster le plan Free** : 100-500 req/mois
+3. **Vérifier/Ajuster le plan Basic** : 100 req/mois (gratuit)
 4. **Ajouter des screenshots** : 3-5 images de démonstration
 
 ### 🟡 Priorité 2 - Cette semaine
@@ -197,7 +197,7 @@ ocr, invoice, facturx, pdf, json, france, documents, accounting, finance, factur
 ### Votre API (objectif)
 - **Nom** : "OCR Facture FR → JSON + Factur-X" ✅
 - **Tags** : 8-10 tags pertinents ✅
-- **Free tier** : 100-500 req/mois ✅
+- **Free tier** : 100 req/mois (gratuit) ✅
 - **Docs** : Tutoriel + article ✅
 - **Abonnés** : 50-100 (objectif court terme) ✅
 

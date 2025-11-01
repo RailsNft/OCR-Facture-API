@@ -23,10 +23,10 @@ Une fois votre API visible, vous pouvez partager le lien direct vers votre page 
 
 Sur la page de votre API, l'utilisateur verra les plans disponibles :
 
-- **BASIC (Free)** : $0/mois - 10-20 requêtes/jour
-- **PRO** : $10/mois - 500 requêtes/jour  
-- **ULTRA** : $30/mois - 2000 requêtes/jour
-- **MEGA** : $100/mois - Illimité
+- **BASIC (Gratuit)** : $0/mois - 100 requêtes/mois
+- **PRO** : $15/mois - 20 000 requêtes/mois  
+- **ULTRA** : $59/mois - 80 000 requêtes/mois
+- **MEGA** : $149/mois - 250 000 requêtes/mois
 
 ### Étape 3: S'abonner
 

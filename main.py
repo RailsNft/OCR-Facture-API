@@ -100,6 +100,11 @@ init_cache_backend(
     force_memory=settings.force_memory_cache
 )
 
+# Initialiser Redis pour rate limiting si disponible
+if settings.redis_url and not settings.force_memory_cache:
+    from rate_limiting import init_rate_limit_redis
+    init_rate_limit_redis(settings.redis_url, settings.redis_db)
+
 CACHE_TTL_HOURS = 24  # Cache valide 24h
 IDEMPOTENCY_TTL_HOURS = 24  # Les clés idempotence sont valides 24h
 
@@ -2100,20 +2105,22 @@ async def get_quota_v1(request: Request):
     from rate_limiting import get_plan_from_request, check_rate_limit
     
     plan = get_plan_from_request(request)
-    allowed, rate_limit_info = check_rate_limit(request, limit_type="monthly")
     daily_allowed, daily_info = check_rate_limit(request, limit_type="daily")
+    
+    # Pour monthly, calculer depuis daily si nécessaire
+    monthly_allowed, monthly_info = check_rate_limit(request, limit_type="monthly")
     
     return {
         "plan": plan,
-        "monthly": {
-            "limit": rate_limit_info["limit"],
-            "remaining": rate_limit_info["remaining"],
-            "reset_time": rate_limit_info["reset_time"]
-        },
         "daily": {
-            "limit": daily_info["limit"],
-            "remaining": daily_info["remaining"],
-            "reset_time": daily_info["reset_time"]
+            "limit": daily_info["limit"] if daily_info else None,
+            "remaining": daily_info["remaining"] if daily_info else None,
+            "reset_time": daily_info["reset_time"] if daily_info else None
+        },
+        "monthly": {
+            "limit": monthly_info["limit"] if monthly_info else None,
+            "remaining": monthly_info["remaining"] if monthly_info else None,
+            "reset_time": monthly_info["reset_time"] if monthly_info else None
         }
     }
 

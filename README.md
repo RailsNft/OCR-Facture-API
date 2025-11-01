@@ -243,10 +243,10 @@ Pour chaque endpoint (`/ocr/upload`, `/ocr/base64`), configurez:
 ### 4. Définir les plans de tarification
 
 Sur RapidAPI, vous pouvez créer plusieurs plans:
-- **Free**: 10 requêtes/jour
-- **Basic**: 100 requêtes/jour - $5/mois
-- **Pro**: 1000 requêtes/jour - $20/mois
-- **Enterprise**: Illimité - Contact
+- **Basic (Gratuit)**: 100 requêtes/mois
+- **Pro**: 20 000 requêtes/mois - $15/mois
+- **Ultra**: 80 000 requêtes/mois - $59/mois
+- **Mega**: 250 000 requêtes/mois - $149/mois
 
 ### 5. Ajouter des exemples et documentation
 

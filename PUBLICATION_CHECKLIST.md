@@ -23,10 +23,10 @@
 - [x] Terms of Use ajoutés
 
 ### 4. Plans de tarification
-- [ ] Plan Free créé (10-50 requêtes/jour)
-- [ ] Plan Basic créé ($5-10/mois, 100-500 requêtes/jour)
-- [ ] Plan Pro créé ($20-30/mois, 1000-5000 requêtes/jour)
-- [ ] Plan Enterprise créé (Custom, illimité)
+- [ ] Plan Basic créé (100 requêtes/mois - gratuit)
+- [ ] Plan Pro créé ($15/mois, 20 000 requêtes/mois)
+- [ ] Plan Ultra créé ($59/mois, 80 000 requêtes/mois)
+- [ ] Plan Mega créé ($149/mois, 250 000 requêtes/mois)
 
 ### 5. Exemples et tests
 - [ ] Exemples de requêtes ajoutés pour chaque endpoint

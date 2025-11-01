@@ -172,10 +172,10 @@
 
 | Plan | Mentionné | État actuel | Action |
 |------|-----------|-------------|--------|
-| **Free** | 10 req/j | ❓ À vérifier | Configurer sur RapidAPI |
-| **Basic** | 49€/mois / 2000 req | ❓ À vérifier | Configurer sur RapidAPI |
-| **Pro** | 149€/mois / 10k req | ❓ À vérifier | Configurer sur RapidAPI |
-| **Enterprise** | >50k req | ❓ À vérifier | Configurer sur RapidAPI |
+| **Basic** | 100 req/mois (gratuit) | ✅ Configuré | Configurer sur RapidAPI |
+| **Pro** | $15/mois / 20k req/mois | ✅ Configuré | Configurer sur RapidAPI |
+| **Ultra** | $59/mois / 80k req/mois | ✅ Configuré | Configurer sur RapidAPI |
+| **Mega** | $149/mois / 250k req/mois | ✅ Configuré | Configurer sur RapidAPI |
 
 **Recommandation** : Vérifier et ajuster selon concurrence RapidAPI
 

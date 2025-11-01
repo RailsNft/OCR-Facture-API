@@ -18,7 +18,7 @@ Cette API permet d'extraire automatiquement les données structurées de vos fac
 
 1. Allez sur [RapidAPI](https://rapidapi.com) et cherchez **"OCR Facture FR"**
 2. Cliquez sur l'API
-3. Choisissez le plan **Free** (100 requêtes/mois)
+3. Choisissez le plan **Basic** (100 requêtes/mois - gratuit)
 4. Cliquez sur "Subscribe"
 5. Obtenez votre clé API dans le dashboard
 
@@ -348,8 +348,8 @@ except Exception as e:
 
 ## ❓ FAQ
 
-**Q : Quelle est la limite du plan Free ?**  
-R : 100 requêtes/mois
+**Q : Quelle est la limite du plan Basic ?**  
+R : Basic = 100/mois (gratuit), Pro = 20k/mois ($15), Ultra = 80k/mois ($59), Mega = 250k/mois ($149)
 
 **Q : Puis-je traiter des PDFs ?**  
 R : Oui, l'API supporte les PDFs (multi-pages)

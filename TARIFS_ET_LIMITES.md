@@ -139,7 +139,7 @@
 - Message : `"Quota exceeded. Upgrade your plan or wait for quota reset."`
 
 **Réinitialisation :**
-- **Plan Free** : Quota réinitialisé quotidiennement (à minuit UTC)
+- **Plan BASIC** : Quota réinitialisé mensuellement (1er du mois)
 - **Plans payants** : Quota réinitialisé mensuellement (1er du mois) ou selon cycle d'abonnement
 
 **Solutions en cas de dépassement :**
@@ -345,116 +345,6 @@ Les endpoints suivants **ne consomment pas** de quota :
 
 ---
 
-## 💡 Pourquoi payer si le code est disponible sur GitHub ?
-
-**Bonne question !** Le code source est disponible sur GitHub, mais voici pourquoi utiliser l'API hébergée reste le meilleur choix pour la plupart des utilisateurs :
-
-### ⚡ Commodité et gain de temps
-
-**Option 1 : Utiliser l'API hébergée (5 minutes)**
-- Obtenir une clé API RapidAPI
-- Faire votre première requête
-- C'est tout ! ✅
-
-**Option 2 : Auto-héberger (plusieurs jours/heures)**
-- Installer et configurer Tesseract OCR
-- Configurer l'environnement Python
-- Installer toutes les dépendances
-- Configurer le serveur (Railway, AWS, etc.)
-- Gérer la sécurité (authentification, rate limiting)
-- Configurer le monitoring et les logs
-- Mettre en place la scalabilité
-- **Temps estimé : 8-16 heures de travail**
-
-### 💰 Coût réel comparé
-
-| Coût | API Hébergée (PRO) | Auto-hébergement |
-|------|-------------------|------------------|
-| **Abonnement** | $15/mois | $0 |
-| **Infrastructure serveur** | $0 (inclus) | **$20-100/mois** (Railway, AWS, etc.) |
-| **Maintenance mensuelle** | $0 (inclus) | **2-4h/mois** (~$50-200) |
-| **Mises à jour** | $0 (automatiques) | **1-2h/mois** (~$25-100) |
-| **Support technique** | $0 (inclus) | **Votre temps** |
-| **Monitoring** | $0 (inclus) | **$10-50/mois** (outils) |
-| **Total réel** | **$15/mois** | **$105-450/mois** + votre temps |
-
-### 🚀 Avantages de l'API hébergée
-
-#### 1. **Scalabilité automatique**
-- L'API s'adapte automatiquement à votre charge
-- Pas besoin de gérer les pics de trafic
-- Infrastructure optimisée déjà en place
-
-#### 2. **Mises à jour automatiques**
-- Nouvelles fonctionnalités ajoutées régulièrement
-- Corrections de bugs automatiques
-- Pas besoin de maintenir votre fork
-
-#### 3. **Fiabilité et disponibilité**
-- **99.9% uptime** garanti (plans Enterprise)
-- Infrastructure redondante
-- Pas de panne de serveur à gérer
-
-#### 4. **Support inclus**
-- Support email pour les plans payants
-- Documentation complète et à jour
-- Communauté GitHub pour les questions
-
-#### 5. **Sécurité gérée**
-- Authentification sécurisée
-- Rate limiting automatique
-- Protection DDoS
-- Conformité RGPD gérée
-
-#### 6. **Pas de compétences techniques requises**
-- Utilisable par des non-développeurs
-- Intégration simple (API REST)
-- Exemples de code fournis
-
-### 🎯 Quand auto-héberger a du sens
-
-Auto-héberger peut être intéressant si :
-- ✅ Vous avez **plus de 500 000 factures/mois** (économies potentielles)
-- ✅ Vous avez une **équipe DevOps dédiée**
-- ✅ Vous avez besoin de **modifications spécifiques** du code
-- ✅ Vous avez des **exigences de conformité strictes** (données hébergées on-premise)
-
-### 📊 Comparaison concrète
-
-**Cas d'usage : PME avec 1 000 factures/mois**
-
-**Option API hébergée (PRO) :**
-- Coût : **$15/mois**
-- Temps de setup : **5 minutes**
-- Maintenance : **0 heure/mois**
-- **Total annuel : $180**
-
-**Option Auto-hébergement :**
-- Coût infrastructure : **$50/mois** (minimum)
-- Temps de setup : **8 heures** (valeur : ~$400)
-- Maintenance : **2h/mois** (valeur : ~$100/mois)
-- **Total annuel : $1 800** + votre temps précieux
-
-**Économie avec l'API : $1 620/an + gain de temps**
-
-### ✅ Conclusion
-
-**Le code est disponible pour :**
-- ✅ Comprendre comment ça fonctionne
-- ✅ Apprendre et contribuer
-- ✅ Auto-héberger si vraiment nécessaire
-- ✅ Personnaliser pour des besoins spécifiques
-
-**Mais l'API hébergée reste le meilleur choix pour :**
-- ✅ **95% des utilisateurs** (gain de temps + économies)
-- ✅ **Démarrage rapide** (5 minutes vs 8 heures)
-- ✅ **Fiabilité** (infrastructure professionnelle)
-- ✅ **Économies** (moins cher que l'auto-hébergement pour la plupart)
-
-**C'est comme Linux : le code est libre, mais la plupart des entreprises paient Red Hat/Ubuntu pour le support et la maintenance !** 🐧
-
----
-
 ## 📞 Contact commercial
 
 Pour les plans Enterprise ou questions tarifaires :
@@ -463,6 +353,5 @@ Pour les plans Enterprise ou questions tarifaires :
 
 ---
 
-**Dernière mise à jour :** [Date actuelle]  
-**Tarifs en vigueur :** [Date de mise à jour]
-
+**Dernière mise à jour :** 2024-03-15  
+**Tarifs en vigueur :** 2024-03-15
