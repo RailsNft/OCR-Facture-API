@@ -12,8 +12,17 @@ import re
 import os
 
 # Configurer le chemin Tesseract si nécessaire (pour certains environnements Docker)
-if os.path.exists('/usr/bin/tesseract'):
-    pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
+# Essayer plusieurs chemins possibles
+tesseract_paths = ['/usr/bin/tesseract', '/usr/local/bin/tesseract', 'tesseract']
+for path in tesseract_paths:
+    if os.path.exists(path) or path == 'tesseract':
+        try:
+            pytesseract.pytesseract.tesseract_cmd = path
+            # Tester si ça fonctionne
+            pytesseract.get_tesseract_version()
+            break
+        except:
+            continue
 
 app = FastAPI(
     title="OCR Facture API",
@@ -70,6 +79,15 @@ def perform_ocr(image_data: bytes, language: str = "fra") -> dict:
     Effectue l'OCR sur l'image utilisant pytesseract
     """
     try:
+        # Vérifier que Tesseract est disponible
+        try:
+            pytesseract.get_tesseract_version()
+        except Exception as tess_err:
+            raise HTTPException(
+                status_code=500, 
+                detail=f"Tesseract OCR n'est pas disponible: {str(tess_err)}"
+            )
+        
         # Ouvrir l'image depuis les bytes
         image = Image.open(io.BytesIO(image_data))
         
@@ -88,6 +106,15 @@ def perform_ocr(image_data: bytes, language: str = "fra") -> dict:
         }
         tesseract_lang = lang_map.get(language, "fra")
         
+        # Vérifier que la langue est disponible
+        try:
+            available_langs = pytesseract.get_languages()
+            if tesseract_lang not in available_langs:
+                # Fallback sur eng si la langue demandée n'est pas disponible
+                tesseract_lang = "eng" if "eng" in available_langs else available_langs[0] if available_langs else "fra"
+        except:
+            pass  # Si on ne peut pas vérifier, on continue quand même
+        
         # Effectuer l'OCR
         text = pytesseract.image_to_string(image, lang=tesseract_lang)
         
@@ -99,6 +126,8 @@ def perform_ocr(image_data: bytes, language: str = "fra") -> dict:
             "data": data,
             "language": tesseract_lang
         }
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erreur lors du traitement OCR: {str(e)}")
 

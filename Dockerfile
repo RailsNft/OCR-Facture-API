@@ -23,9 +23,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copier le code de l'application
 COPY . .
 
+# Rendre le script de démarrage exécutable
+RUN chmod +x start.sh
+
 # Exposer le port (Railway définit PORT dynamiquement)
 EXPOSE ${PORT:-8000}
 
-# Commande pour démarrer l'application (utilise PORT de Railway ou 8000 par défaut)
-CMD sh -c "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}"
+# Commande pour démarrer l'application
+CMD ["./start.sh"]
 
