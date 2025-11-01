@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculateur ROI - Automatisation Factures | OCR Facture API</title>
+    <meta name="description" content="Calculez combien vous pouvez économiser en automatisant le traitement de vos factures avec notre API OCR.">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 50px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #666;
+            font-size: 1.2em;
+            margin-bottom: 40px;
+        }
+        
+        .form-group {
+            margin-bottom: 30px;
+        }
+        
+        label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 1.1em;
+        }
+        
+        .input-group {
+            position: relative;
+        }
+        
+        input[type="number"],
+        input[type="range"] {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1.1em;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        input[type="range"] {
+            padding: 0;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            appearance: none;
+            width: 25px;
+            height: 25px;
+            background: #667eea;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .unit {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #999;
+            font-weight: 600;
+        }
+        
+        .range-value {
+            display: block;
+            margin-top: 10px;
+            text-align: center;
+            font-weight: 700;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+        
+        .calculate-btn {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.3em;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+        
+        .results {
+            display: none;
+            margin-top: 50px;
+            padding: 40px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 15px;
+        }
+        
+        .results.show {
+            display: block;
+            animation: slideIn 0.5s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .results h2 {
+            color: #667eea;
+            font-size: 2em;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .result-card {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        
+        .result-label {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .result-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+        
+        .result-value.positive {
+            color: #28a745;
+        }
+        
+        .result-value.negative {
+            color: #dc3545;
+        }
+        
+        .result-unit {
+            color: #999;
+            font-size: 0.9em;
+        }
+        
+        .savings-highlight {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            margin: 30px 0;
+        }
+        
+        .savings-highlight h3 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+        }
+        
+        .savings-highlight .big-number {
+            font-size: 4em;
+            font-weight: 700;
+            margin: 20px 0;
+        }
+        
+        .breakdown {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+        
+        .breakdown h3 {
+            color: #667eea;
+            margin-bottom: 20px;
+        }
+        
+        .breakdown-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .breakdown-item:last-child {
+            border-bottom: none;
+            font-weight: 700;
+            font-size: 1.2em;
+            color: #667eea;
+        }
+        
+        .cta-section {
+            text-align: center;
+            margin-top: 40px;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 18px 40px;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1.2em;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 30px 20px;
+            }
+            
+            h1 {
+                font-size: 2em;
+            }
+            
+            .result-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 Calculateur ROI</h1>
+        <p class="subtitle">Découvrez combien vous pouvez économiser en automatisant vos factures</p>
+        
+        <form id="roiForm">
+            <div class="form-group">
+                <label for="invoices">Combien de factures traitez-vous par mois ?</label>
+                <input type="range" id="invoices" min="10" max="1000" value="100" step="10">
+                <span class="range-value" id="invoicesValue">100 factures/mois</span>
+            </div>
+            
+            <div class="form-group">
+                <label for="timePerInvoice">Temps moyen par facture (traitement manuel)</label>
+                <div class="input-group">
+                    <input type="number" id="timePerInvoice" value="5" min="1" max="60">
+                    <span class="unit">min</span>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="hourlyCost">Coût horaire de votre équipe</label>
+                <div class="input-group">
+                    <input type="number" id="hourlyCost" value="30" min="10" max="200">
+                    <span class="unit">€/h</span>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="errorRate">Taux d'erreur estimé (traitement manuel)</label>
+                <input type="range" id="errorRate" min="0" max="20" value="5" step="1">
+                <span class="range-value" id="errorRateValue">5%</span>
+            </div>
+            
+            <button type="submit" class="calculate-btn">📊 Calculer mon ROI</button>
+        </form>
+        
+        <div class="results" id="results">
+            <h2>🎯 Vos Résultats</h2>
+            
+            <div class="result-grid">
+                <div class="result-card">
+                    <div class="result-label">Temps actuel</div>
+                    <div class="result-value" id="currentTime">0</div>
+                    <div class="result-unit">heures/mois</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-label">Coût actuel</div>
+                    <div class="result-value" id="currentCost">0</div>
+                    <div class="result-unit">€/mois</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-label">Coût API</div>
+                    <div class="result-value" id="apiCost">15</div>
+                    <div class="result-unit">€/mois</div>
+                </div>
+            </div>
+            
+            <div class="savings-highlight">
+                <h3>💸 Vous économisez</h3>
+                <div class="big-number" id="monthlySavings">0€</div>
+                <p>par mois, soit <strong id="yearlySavings">0€</strong> par an</p>
+            </div>
+            
+            <div class="breakdown">
+                <h3>📊 Détail des Économies</h3>
+                <div class="breakdown-item">
+                    <span>Temps manuel actuel</span>
+                    <span id="manualTimeBreakdown">0h</span>
+                </div>
+                <div class="breakdown-item">
+                    <span>Temps avec API (automatisé)</span>
+                    <span id="apiTimeBreakdown">~0.5h</span>
+                </div>
+                <div class="breakdown-item">
+                    <span>Temps économisé</span>
+                    <span id="timeSavedBreakdown">0h</span>
+                </div>
+                <div class="breakdown-item">
+                    <span>Coût erreurs évitées</span>
+                    <span id="errorCostBreakdown">0€</span>
+                </div>
+                <div class="breakdown-item">
+                    <span>ROI sur 1 an</span>
+                    <span id="roiPercentage">0%</span>
+                </div>
+            </div>
+            
+            <div class="result-grid" style="margin-top: 30px;">
+                <div class="result-card">
+                    <div class="result-label">Temps de retour</div>
+                    <div class="result-value positive" id="paybackPeriod">0</div>
+                    <div class="result-unit">jours</div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-label">Économie par facture</div>
+                    <div class="result-value positive" id="savingsPerInvoice">0€</div>
+                    <div class="result-unit"></div>
+                </div>
+                
+                <div class="result-card">
+                    <div class="result-label">Réduction erreurs</div>
+                    <div class="result-value positive" id="errorReduction">-95%</div>
+                    <div class="result-unit"></div>
+                </div>
+            </div>
+            
+            <div class="cta-section">
+                <p style="font-size: 1.2em; margin-bottom: 20px; color: #666;">
+                    Prêt à économiser <strong id="ctaSavings">0€</strong> par an ?
+                </p>
+                <a href="https://rapidapi.com/hub" class="cta-button">🚀 Commencer Gratuitement</a>
+                <p style="margin-top: 15px; color: #999;">
+                    Trial gratuit • 100 requêtes/mois • Aucune carte bancaire
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Update range values display
+        const invoicesRange = document.getElementById('invoices');
+        const invoicesValue = document.getElementById('invoicesValue');
+        const errorRange = document.getElementById('errorRate');
+        const errorValue = document.getElementById('errorRateValue');
+        
+        invoicesRange.addEventListener('input', (e) => {
+            invoicesValue.textContent = `${e.target.value} factures/mois`;
+        });
+        
+        errorRange.addEventListener('input', (e) => {
+            errorValue.textContent = `${e.target.value}%`;
+        });
+        
+        // Calculate ROI
+        document.getElementById('roiForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            // Get values
+            const invoices = parseInt(document.getElementById('invoices').value);
+            const timePerInvoice = parseInt(document.getElementById('timePerInvoice').value);
+            const hourlyCost = parseInt(document.getElementById('hourlyCost').value);
+            const errorRate = parseInt(document.getElementById('errorRate').value) / 100;
+            
+            // Calculate current situation
+            const totalMinutes = invoices * timePerInvoice;
+            const totalHours = totalMinutes / 60;
+            const currentMonthlyCost = totalHours * hourlyCost;
+            
+            // Calculate with API
+            const apiTime = invoices * 0.17 / 60; // ~10 seconds per invoice automated
+            const apiMonthlyCost = determineAPICost(invoices);
+            
+            // Calculate error costs (assume each error costs 30 min to fix)
+            const errorsPerMonth = invoices * errorRate;
+            const errorFixTime = errorsPerMonth * 0.5; // 30 min per error
+            const errorCost = errorFixTime * hourlyCost;
+            
+            // Calculate savings
+            const timeSaved = totalHours - apiTime;
+            const costSaved = currentMonthlyCost - apiMonthlyCost;
+            const totalSavings = costSaved + errorCost;
+            const yearlySavings = totalSavings * 12;
+            
+            // Calculate ROI metrics
+            const annualAPICost = apiMonthlyCost * 12;
+            const roi = ((yearlySavings - annualAPICost) / annualAPICost) * 100;
+            const paybackDays = Math.ceil((apiMonthlyCost / totalSavings) * 30);
+            const savingsPerInvoice = totalSavings / invoices;
+            
+            // Update display
+            document.getElementById('currentTime').textContent = totalHours.toFixed(1);
+            document.getElementById('currentCost').textContent = currentMonthlyCost.toFixed(0);
+            document.getElementById('apiCost').textContent = apiMonthlyCost.toFixed(0);
+            document.getElementById('monthlySavings').textContent = `${totalSavings.toFixed(0)}€`;
+            document.getElementById('yearlySavings').textContent = `${yearlySavings.toFixed(0)}€`;
+            
+            document.getElementById('manualTimeBreakdown').textContent = `${totalHours.toFixed(1)}h`;
+            document.getElementById('apiTimeBreakdown').textContent = `${apiTime.toFixed(1)}h`;
+            document.getElementById('timeSavedBreakdown').textContent = `${timeSaved.toFixed(1)}h`;
+            document.getElementById('errorCostBreakdown').textContent = `${errorCost.toFixed(0)}€`;
+            document.getElementById('roiPercentage').textContent = `${roi.toFixed(0)}%`;
+            
+            document.getElementById('paybackPeriod').textContent = paybackDays < 1 ? '<1' : paybackDays;
+            document.getElementById('savingsPerInvoice').textContent = `${savingsPerInvoice.toFixed(2)}€`;
+            
+            document.getElementById('ctaSavings').textContent = `${yearlySavings.toFixed(0)}€`;
+            
+            // Show results
+            document.getElementById('results').classList.add('show');
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        });
+        
+        function determineAPICost(invoices) {
+            if (invoices <= 100) return 0; // Free plan
+            if (invoices <= 20000) return 15; // Pro plan
+            if (invoices <= 80000) return 59; // Ultra plan
+            return 149; // Mega plan
+        }
+    </script>
+</body>
+</html>
+
