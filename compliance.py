@@ -232,6 +232,15 @@ def validate_french_vat(extracted_data: Dict) -> Dict:
 # Cache pour les tokens OAuth2 (évite de demander un nouveau token à chaque requête)
 _token_cache: Dict[str, Dict] = {}
 
+# Cache pour les résultats Sirene (1 jour de validité)
+_sirene_results_cache: Dict[str, Dict] = {}
+
+# Rate limiting pour API Sirene
+# Limites recommandées par l'API Sirene : 30 requêtes/minute, 5000 requêtes/jour
+_sirene_rate_limit: Dict[str, List[datetime]] = {}
+SIRENE_RATE_LIMIT_PER_MINUTE = 30
+SIRENE_RATE_LIMIT_PER_DAY = 5000
+
 
 def _get_oauth2_token_client_credentials(
     client_id: str,
@@ -359,6 +368,52 @@ def _get_oauth2_token_consumer_key(
         return None
 
 
+def _check_sirene_rate_limit() -> None:
+    """
+    Vérifie et applique le rate limiting pour l'API Sirene
+    
+    Raises:
+        Exception: Si le rate limit est dépassé
+    """
+    now = datetime.now()
+    rate_limit_key = "sirene_api_calls"
+    
+    # Nettoyer les anciennes entrées (plus de 1 minute)
+    if rate_limit_key in _sirene_rate_limit:
+        _sirene_rate_limit[rate_limit_key] = [
+            call_time for call_time in _sirene_rate_limit[rate_limit_key]
+            if (now - call_time).total_seconds() < 60
+        ]
+    
+    # Vérifier la limite par minute
+    if rate_limit_key in _sirene_rate_limit:
+        calls_last_minute = len(_sirene_rate_limit[rate_limit_key])
+        if calls_last_minute >= SIRENE_RATE_LIMIT_PER_MINUTE:
+            raise Exception(
+                f"Rate limit API Sirene atteint : {calls_last_minute} requêtes dans la dernière minute "
+                f"(limite : {SIRENE_RATE_LIMIT_PER_MINUTE}/minute). Veuillez réessayer dans quelques secondes."
+            )
+    
+    # Enregistrer cet appel
+    if rate_limit_key not in _sirene_rate_limit:
+        _sirene_rate_limit[rate_limit_key] = []
+    _sirene_rate_limit[rate_limit_key].append(now)
+    
+    # Nettoyer les anciennes entrées (plus de 24 heures)
+    _sirene_rate_limit[rate_limit_key] = [
+        call_time for call_time in _sirene_rate_limit[rate_limit_key]
+        if (now - call_time).total_seconds() < 86400  # 24 heures
+    ]
+    
+    # Vérifier la limite par jour
+    calls_last_day = len(_sirene_rate_limit[rate_limit_key])
+    if calls_last_day >= SIRENE_RATE_LIMIT_PER_DAY:
+        raise Exception(
+            f"Rate limit API Sirene atteint : {calls_last_day} requêtes dans les dernières 24 heures "
+            f"(limite : {SIRENE_RATE_LIMIT_PER_DAY}/jour). Veuillez réessayer demain."
+        )
+
+
 def _call_sirene_api(siret: str, access_token: str) -> Optional[Dict]:
     """
     Appelle l'API Sirene v3 pour obtenir les données d'un SIRET
@@ -370,6 +425,20 @@ def _call_sirene_api(siret: str, access_token: str) -> Optional[Dict]:
     Returns:
         Données de l'entreprise ou None en cas d'erreur
     """
+    # Vérifier le cache des résultats Sirene (1 jour)
+    cache_key = f"sirene_result_{siret}"
+    if cache_key in _sirene_results_cache:
+        cached_result = _sirene_results_cache[cache_key]
+        cached_at = cached_result.get("cached_at")
+        if cached_at and datetime.now() < cached_at + timedelta(days=1):
+            return cached_result.get("data")
+    
+    # Vérifier le rate limiting
+    try:
+        _check_sirene_rate_limit()
+    except Exception as rate_limit_error:
+        raise rate_limit_error
+    
     try:
         api_url = f"https://api.insee.fr/entreprises/sirene/v3/siret/{siret}"
         
@@ -383,12 +452,33 @@ def _call_sirene_api(siret: str, access_token: str) -> Optional[Dict]:
         )
         
         if response.status_code == 200:
-            return response.json()
+            data = response.json()
+            # Mettre en cache le résultat
+            _sirene_results_cache[cache_key] = {
+                "data": data,
+                "cached_at": datetime.now()
+            }
+            return data
         elif response.status_code == 404:
+            # Mettre en cache aussi les résultats négatifs (mais moins longtemps)
+            _sirene_results_cache[cache_key] = {
+                "data": None,
+                "cached_at": datetime.now()
+            }
             return None  # SIRET non trouvé
+        elif response.status_code == 429:
+            # Rate limit atteint
+            raise Exception("Rate limit API Sirene atteint. Veuillez réessayer plus tard.")
+        elif response.status_code == 401:
+            # Token invalide ou expiré
+            raise Exception("Token API Sirene invalide ou expiré. Vérifiez vos identifiants.")
         else:
             return None
     
+    except requests.exceptions.Timeout:
+        raise Exception("Timeout lors de l'appel à l'API Sirene")
+    except requests.exceptions.RequestException as e:
+        raise Exception(f"Erreur réseau lors de l'appel à l'API Sirene : {str(e)}")
     except Exception as e:
         return None
 
@@ -564,14 +654,24 @@ def enrich_siren_siret(
             }
         
         # Appeler l'API Sirene
-        sirene_data = _call_sirene_api(siret, access_token)
+        try:
+            sirene_data = _call_sirene_api(siret, access_token)
+        except Exception as api_error:
+            return {
+                "success": False,
+                "error": str(api_error),
+                "siret": siret,
+                "siren": siret[:9],
+                "error_type": "api_error"
+            }
         
         if not sirene_data:
             return {
                 "success": False,
-                "error": "SIRET non trouvé dans la base Sirene ou erreur API",
+                "error": "SIRET non trouvé dans la base Sirene",
                 "siret": siret,
-                "siren": siret[:9]
+                "siren": siret[:9],
+                "error_type": "not_found"
             }
         
         # Parser la réponse

@@ -16,6 +16,14 @@ import json
 from datetime import datetime, timedelta
 from compliance import extract_compliance_data, detect_siren_siret, detect_vat_intracom, validate_vies, enrich_siren_siret, validate_french_vat
 from facturx import generate_facturx_xml, parse_facturx_from_pdf, parse_facturx_xml, validate_facturx_xml
+from export import (
+    export_to_sage,
+    export_to_quickbooks,
+    export_to_xero,
+    export_to_fec,
+    export_to_csv_generic,
+    export_to_json
+)
 from rate_limiting import rate_limit_middleware
 from monitoring import monitoring_middleware, get_metrics, log_cache_hit, log_cache_miss
 from image_preprocessing import preprocess_image, should_preprocess
@@ -227,11 +235,12 @@ app.middleware("http")(rate_limit_middleware)
 # Middleware pour vérifier l'authentification RapidAPI
 @app.middleware("http")
 async def verify_rapidapi_auth(request: Request, call_next):
-    # Skip auth pour les endpoints de documentation, health, demo et assets statiques
+    # Skip auth pour les endpoints de documentation, health, demo, images et assets statiques
     public_paths = ["/docs", "/redoc", "/openapi.json", "/health", "/"]
     if (request.url.path in public_paths 
         or request.url.path.startswith("/demo")
         or request.url.path.startswith("/assets/")
+        or request.url.path.startswith("/images/")
         or request.url.path.startswith("/v1/languages")):
         response = await call_next(request)
         return response
@@ -1916,6 +1925,159 @@ async def validate_facturx_endpoint(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# ==================== EXPORT FORMATS COMPTABLES ====================
+
+@app.post("/export/sage")
+async def export_sage_endpoint(
+    invoice_data: dict = Body(...)
+):
+    """
+    Exporte les données de facture au format Sage (CSV)
+    
+    **Paramètres:**
+    - `invoice_data`: Données de facture extraites (même format que la réponse OCR)
+    
+    **Retourne:**
+    - CSV au format Sage
+    """
+    try:
+        csv_content = export_to_sage(invoice_data)
+        return {
+            "success": True,
+            "format": "Sage CSV",
+            "content": csv_content,
+            "content_type": "text/csv"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/export/quickbooks")
+async def export_quickbooks_endpoint(
+    invoice_data: dict = Body(...)
+):
+    """
+    Exporte les données au format QuickBooks (IIF - Intuit Interchange Format)
+    
+    **Paramètres:**
+    - `invoice_data`: Données de facture extraites
+    
+    **Retourne:**
+    - Fichier IIF au format QuickBooks
+    """
+    try:
+        iif_content = export_to_quickbooks(invoice_data)
+        return {
+            "success": True,
+            "format": "QuickBooks IIF",
+            "content": iif_content,
+            "content_type": "text/plain"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/export/xero")
+async def export_xero_endpoint(
+    invoice_data: dict = Body(...)
+):
+    """
+    Exporte les données au format Xero (CSV)
+    
+    **Paramètres:**
+    - `invoice_data`: Données de facture extraites
+    
+    **Retourne:**
+    - CSV au format Xero
+    """
+    try:
+        csv_content = export_to_xero(invoice_data)
+        return {
+            "success": True,
+            "format": "Xero CSV",
+            "content": csv_content,
+            "content_type": "text/csv"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/export/fec")
+async def export_fec_endpoint(
+    invoice_data: dict = Body(...)
+):
+    """
+    Exporte les données au format FEC (Fichier des Écritures Comptables)
+    Format requis par l'administration fiscale française
+    
+    **Paramètres:**
+    - `invoice_data`: Données de facture extraites
+    
+    **Retourne:**
+    - Fichier FEC au format CSV (séparateur tabulation)
+    """
+    try:
+        fec_content = export_to_fec(invoice_data)
+        return {
+            "success": True,
+            "format": "FEC (Fichier des Écritures Comptables)",
+            "content": fec_content,
+            "content_type": "text/csv"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/export/csv")
+async def export_csv_generic_endpoint(
+    invoice_data: dict = Body(...)
+):
+    """
+    Exporte les données au format CSV générique (compatible avec la plupart des logiciels comptables)
+    
+    **Paramètres:**
+    - `invoice_data`: Données de facture extraites
+    
+    **Retourne:**
+    - CSV générique
+    """
+    try:
+        csv_content = export_to_csv_generic(invoice_data)
+        return {
+            "success": True,
+            "format": "CSV générique",
+            "content": csv_content,
+            "content_type": "text/csv"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/export/json")
+async def export_json_endpoint(
+    invoice_data: dict = Body(...)
+):
+    """
+    Exporte les données au format JSON structuré
+    
+    **Paramètres:**
+    - `invoice_data`: Données de facture extraites
+    
+    **Retourne:**
+    - JSON formaté
+    """
+    try:
+        json_content = export_to_json(invoice_data)
+        return {
+            "success": True,
+            "format": "JSON",
+            "content": json_content,
+            "content_type": "application/json"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Ajouter les autres endpoints v1 essentiels
 @v1_router.post("/ocr/base64", response_model=OCRResponse)
 async def ocr_from_base64_v1(
@@ -2168,6 +2330,11 @@ app.include_router(v1_router)
 demo_dist_path = os.path.join(os.path.dirname(__file__), "demo", "dist")
 if os.path.exists(demo_dist_path):
     app.mount("/demo", StaticFiles(directory=demo_dist_path, html=True), name="demo")
+
+# Servir les images statiques pour la documentation
+images_path = os.path.join(os.path.dirname(__file__), "docs", "images")
+if os.path.exists(images_path):
+    app.mount("/images", StaticFiles(directory=images_path), name="images")
 
 if __name__ == "__main__":
     import uvicorn
