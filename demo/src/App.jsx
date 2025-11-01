@@ -64,28 +64,33 @@ function App() {
       }
 
       // Configurer les headers explicitement
-      const config = {
-        headers: {
-          'X-RapidAPI-Proxy-Secret': secretToUse
-        }
+      const headersConfig = {
+        'X-RapidAPI-Proxy-Secret': secretToUse.trim()
       }
 
-      console.log('Envoi de la requête vers:', `${API_BASE_URL}/v1/ocr/upload`)
-      console.log('Header X-RapidAPI-Proxy-Secret:', secretToUse ? 'Présent' : 'Manquant')
-      console.log('Valeur du secret:', secretToUse.substring(0, 10) + '...')
+      console.log('=== DEBUG ===')
+      console.log('URL:', `${API_BASE_URL}/v1/ocr/upload`)
+      console.log('Header config:', headersConfig)
+      console.log('Secret length:', secretToUse.length)
+      console.log('Secret preview:', secretToUse.substring(0, 15) + '...')
 
       const response = await axios.post(
         `${API_BASE_URL}/v1/ocr/upload`,
         formData,
-        config
+        {
+          headers: headersConfig
+        }
       )
 
       setResults(response.data)
     } catch (err) {
-      console.error('Erreur:', err)
-      console.error('Response:', err.response?.data)
+      console.error('=== ERREUR ===')
+      console.error('Message:', err.message)
       console.error('Status:', err.response?.status)
-      console.error('Headers envoyés:', err.config?.headers)
+      console.error('Response data:', err.response?.data)
+      console.error('Request URL:', err.config?.url)
+      console.error('Request headers:', err.config?.headers)
+      console.error('Full error:', err)
       setError(
         err.response?.data?.detail || 
         err.response?.data?.error || 
