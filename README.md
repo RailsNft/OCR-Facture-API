@@ -79,9 +79,17 @@ uvicorn main:app --reload --host 0.0.0.0 --port 8000
 
 Le serveur sera accessible sur `http://localhost:8000`
 
-## 📚 Documentation API
+## 🌐 API en Production
 
-Une fois le serveur démarré, accédez à :
+L'API est déployée et accessible publiquement :
+- **URL de Production**: `https://ocr-facture-api-production.up.railway.app`
+- **Documentation interactive**: `https://ocr-facture-api-production.up.railway.app/docs`
+- **Documentation alternative**: `https://ocr-facture-api-production.up.railway.app/redoc`
+- **Disponible sur RapidAPI**: Recherchez "OCRFactureAPI" sur [RapidAPI Marketplace](https://rapidapi.com)
+
+## 📚 Documentation API (Locale)
+
+Une fois le serveur démarré localement, accédez à :
 - **Documentation interactive (Swagger)** : `http://localhost:8000/docs`
 - **Documentation alternative (ReDoc)** : `http://localhost:8000/redoc`
 
