@@ -94,9 +94,9 @@ brew install bfg
 ```bash
 # Créer un fichier avec les secrets à supprimer
 cat > secrets.txt << EOF
-f67eb770-b6b9-11f0-9b0e-0f41c7e962fd
-cb14a7e2-62f9-4574-8ec1-bcd06e679eb0
-cKBNQc63dwaoHFVohIWuP2kXuBL2XGsa
+votre_secret_rapidapi_ici
+votre_sirene_key_ici
+votre_sirene_secret_ici
 EOF
 ```
 
@@ -146,10 +146,10 @@ git log --all --oneline -- QUICK_START_SIRENE.md MES_IDENTIFIANTS_SIRENE.md CONF
 ### Vérifier que les secrets ont disparu
 
 ```bash
-# Chercher les secrets dans l'historique Git
-git log -p --all | grep -i "f67eb770-b6b9-11f0-9b0e-0f41c7e962fd"
-git log -p --all | grep -i "cb14a7e2-62f9-4574-8ec1-bcd06e679eb0"
-git log -p --all | grep -i "cKBNQc63dwaoHFVohIWuP2kXuBL2XGsa"
+# Chercher les secrets dans l'historique Git (remplacez par vos vrais secrets)
+git log -p --all | grep -i "votre_secret_rapidapi"
+git log -p --all | grep -i "votre_sirene_key"
+git log -p --all | grep -i "votre_sirene_secret"
 
 # Si aucun résultat, c'est bon ! ✅
 ```
