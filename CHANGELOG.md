@@ -1,5 +1,130 @@
 # Changelog - OCR Facture API
 
+## Version 1.2.0 (Novembre 2024)
+
+### 🎉 Nouvelles fonctionnalités majeures
+
+#### ✅ Détection des tableaux structurés
+- **Détection automatique** des tableaux dans les factures
+- **Colonnes détectées automatiquement** (jusqu'à 5 colonnes)
+- Support de différents séparateurs : `|`, espaces multiples, tabulations
+- Extraction des lignes de données avec mapping par colonne
+- Détection intelligente des headers de tableaux
+
+**Exemple de réponse :**
+```json
+{
+  "tables": [
+    {
+      "header": ["Description", "Quantité", "Prix unitaire", "Total"],
+      "rows": [
+        {"Description": "Consultation", "Quantité": "1", "Prix unitaire": "500.00", "Total": "500.00"}
+      ],
+      "row_count": 1
+    }
+  ]
+}
+```
+
+#### ✅ Extraction des coordonnées bancaires
+- **IBAN** : Détection du format standard (15-34 caractères)
+- **SWIFT/BIC** : Codes bancaires internationaux (8 ou 11 caractères)
+- **RIB** : Relevé d'Identité Bancaire français (23 chiffres)
+- **Numéro de compte** : Extraction automatique
+- **Nom de la banque** : Détection contextuelle
+
+**Exemple de réponse :**
+```json
+{
+  "banking_info": {
+    "iban": "FR7612345678901234567890123",
+    "swift": "ABCDEFGH",
+    "bic": "ABCDEFGH",
+    "rib": "12345123451234567890123",
+    "account_number": "123456789012",
+    "bank_name": "Banque Example"
+  }
+}
+```
+
+#### ✅ Traitement par lot (Batch Processing)
+- **Nouveau endpoint** `/ocr/batch`
+- Traiter jusqu'à **10 factures en une seule requête**
+- Toutes les fonctionnalités disponibles (OCR, extraction, scores)
+- Utilise le cache automatiquement pour optimiser les performances
+- Compteur de résultats cachés vs traités
+
+**Exemple d'utilisation :**
+```json
+POST /ocr/batch
+{
+  "files": ["base64_image1", "base64_image2"],
+  "language": "fra"
+}
+```
+
+#### ✅ Cache des résultats
+- **Cache automatique** basé sur le hash SHA256 du fichier
+- **TTL de 24 heures** pour chaque résultat
+- **Limite de 1000 entrées** avec éviction automatique des plus anciens
+- **Indicateur `cached`** dans la réponse pour savoir si le résultat vient du cache
+- **Réponse instantanée** pour les fichiers déjà traités
+
+**Bénéfices :**
+- ⚡ Réponse beaucoup plus rapide (pas de re-traitement OCR)
+- 💰 Économie de ressources serveur
+- 📊 Meilleure expérience utilisateur
+
+#### ✅ Intégrations directes (Webhooks)
+- **Zapier** : `/webhooks/zapier` - Format compatible Zapier
+- **Make (Integromat)** : `/webhooks/make` - Format compatible Make
+- **Salesforce** : `/webhooks/salesforce` - Format Salesforce Invoice object
+
+**Format Zapier :**
+```json
+{
+  "invoice_id": "abc123...",
+  "invoice_data": {...},
+  "timestamp": "2024-11-01T12:00:00",
+  "source": "ocr_facture_api"
+}
+```
+
+**Format Salesforce :**
+```json
+{
+  "InvoiceNumber": "FAC-2024-001",
+  "TotalAmount": 1250.50,
+  "InvoiceDate": "15/03/2024",
+  "VendorName": "Société Example",
+  "CustomerName": "Client ABC",
+  "Items": [...],
+  "BankingInfo": {...},
+  "ConfidenceScores": {...}
+}
+```
+
+### 🔧 Améliorations techniques
+
+- **Performance** : Cache réduit drastiquement le temps de réponse
+- **Robustesse** : Gestion d'erreurs améliorée pour batch processing
+- **Scalabilité** : Prêt pour de gros volumes avec le cache
+- **Intégration** : Webhooks prêts pour automatisation
+
+### 📊 Amélioration des performances
+
+- **Cache** : Réponse instantanée pour fichiers déjà traités
+- **Batch** : Traitement optimisé de plusieurs fichiers
+- **Tableaux** : Extraction structurée améliorée
+
+### 🔄 Changements de compatibilité
+
+- **Réponse API enrichie** : Nouveaux champs `tables` et `banking_info`
+- **Nouveau champ `cached`** : Indique si le résultat vient du cache
+- **Format compatible** : Les anciennes intégrations continuent de fonctionner
+
+---
+
 ## Version 1.1.0 (Novembre 2024)
 
 ### 🎉 Nouvelles fonctionnalités

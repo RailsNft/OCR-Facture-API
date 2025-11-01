@@ -9,9 +9,14 @@ API professionnelle pour l'extraction automatique de données de factures via OC
 - ✅ Extraction des dates de facture
 - ✅ Détection améliorée du numéro de facture
 - ✅ Identification du vendeur et du client
-- ✅ **Nouveau** : Extraction des lignes de facture (items) avec description, quantité, prix unitaire, total
-- ✅ **Nouveau** : Scores de confiance pour chaque donnée extraite (0-1)
-- ✅ **Nouveau** : Support PDF multi-pages (toutes les pages traitées et fusionnées)
+- ✅ Extraction des lignes de facture (items) avec description, quantité, prix unitaire, total
+- ✅ Scores de confiance pour chaque donnée extraite (0-1)
+- ✅ Support PDF multi-pages (toutes les pages traitées et fusionnées)
+- ✅ **Nouveau v1.2.0** : Détection des tableaux structurés avec colonnes automatiques
+- ✅ **Nouveau v1.2.0** : Extraction coordonnées bancaires (IBAN, SWIFT/BIC, RIB)
+- ✅ **Nouveau v1.2.0** : Traitement par lot (batch processing) - jusqu'à 10 factures
+- ✅ **Nouveau v1.2.0** : Cache des résultats (réponse instantanée pour fichiers déjà traités)
+- ✅ **Nouveau v1.2.0** : Intégrations directes Zapier, Make, Salesforce
 - ✅ Support multi-langues (Français, Anglais, Allemand, Espagnol, Italien, Portugais)
 - ✅ Format de réponse structuré JSON
 - ✅ Authentification RapidAPI intégrée
