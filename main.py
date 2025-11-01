@@ -14,6 +14,7 @@ import hashlib
 import json
 from datetime import datetime, timedelta
 from compliance import extract_compliance_data, detect_siren_siret, detect_vat_intracom, validate_vies, enrich_siren_siret, validate_french_vat
+from facturx import generate_facturx_xml, parse_facturx_from_pdf, parse_facturx_xml, validate_facturx_xml
 try:
     import fitz  # PyMuPDF
     PDF_SUPPORT = True
@@ -1510,6 +1511,114 @@ async def validate_vies_endpoint(
         return {
             "success": True,
             "validation": vies_result
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/facturx/generate")
+async def generate_facturx_endpoint(
+    invoice_data: dict = Body(...)
+):
+    """
+    Génère un XML Factur-X (EN16931) à partir des données de facture
+    
+    **Paramètres:**
+    - `invoice_data`: Données de facture extraites (date, numéro, montants, vendeur, client, items)
+    
+    **Retourne:**
+    - XML Factur-X conforme EN16931
+    """
+    try:
+        xml_content = generate_facturx_xml(invoice_data)
+        return {
+            "success": True,
+            "xml": xml_content,
+            "format": "Factur-X EN16931"
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/facturx/parse")
+async def parse_facturx_endpoint(
+    file: UploadFile = File(...)
+):
+    """
+    Extrait le XML Factur-X embarqué dans un PDF/A-3
+    
+    **Paramètres:**
+    - `file`: PDF/A-3 avec XML Factur-X embarqué
+    
+    **Retourne:**
+    - XML extrait
+    - Données parsées de la facture
+    """
+    try:
+        if file.content_type != "application/pdf":
+            raise HTTPException(status_code=400, detail="Le fichier doit être un PDF")
+        
+        file_data = await file.read()
+        xml_content, invoice_data = parse_facturx_from_pdf(file_data)
+        
+        if not xml_content:
+            raise HTTPException(status_code=404, detail="Aucun XML Factur-X trouvé dans le PDF")
+        
+        return {
+            "success": True,
+            "xml": xml_content,
+            "invoice_data": invoice_data
+        }
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/facturx/parse-xml")
+async def parse_facturx_xml_endpoint(
+    xml_content: str = Body(..., embed=True)
+):
+    """
+    Parse un XML Factur-X et extrait les données structurées
+    
+    **Paramètres:**
+    - `xml_content`: XML Factur-X (format string)
+    
+    **Retourne:**
+    - Données extraites de la facture
+    """
+    try:
+        invoice_data = parse_facturx_xml(xml_content)
+        return {
+            "success": True,
+            "invoice_data": invoice_data
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/facturx/validate")
+async def validate_facturx_endpoint(
+    xml_content: str = Body(..., embed=True)
+):
+    """
+    Valide un XML Factur-X contre le schéma EN16931 et vérifie les règles métier
+    
+    **Paramètres:**
+    - `xml_content`: XML Factur-X à valider
+    
+    **Retourne:**
+    - Résultat de validation
+    - Liste des erreurs
+    - Liste des avertissements
+    - Rapport lisible
+    """
+    try:
+        validation_result = validate_facturx_xml(xml_content)
+        return {
+            "success": True,
+            "validation": validation_result
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
