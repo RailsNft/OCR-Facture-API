@@ -1,15 +1,18 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Request
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Request, Body
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import base64
-from typing import Optional, List, Dict
+from typing import Optional, List, Dict, Any
 from config import settings
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 import pytesseract
 from PIL import Image
 import io
 import re
 import os
+import hashlib
+import json
+from datetime import datetime, timedelta
 try:
     import fitz  # PyMuPDF
     PDF_SUPPORT = True
@@ -75,6 +78,46 @@ def custom_openapi():
 
 app.openapi = custom_openapi
 
+# Cache simple en mémoire (pour production, utiliser Redis)
+ocr_cache: Dict[str, Dict[str, Any]] = {}
+CACHE_TTL_HOURS = 24  # Cache valide 24h
+
+
+def get_file_hash(file_data: bytes) -> str:
+    """Génère un hash SHA256 du fichier pour le cache"""
+    return hashlib.sha256(file_data).hexdigest()
+
+
+def get_cached_result(file_hash: str) -> Optional[Dict]:
+    """Récupère un résultat depuis le cache s'il existe et est valide"""
+    if file_hash in ocr_cache:
+        cached_data = ocr_cache[file_hash]
+        # Vérifier si le cache n'est pas expiré
+        cache_time = cached_data.get("timestamp")
+        if cache_time:
+            cache_dt = datetime.fromisoformat(cache_time)
+            if datetime.now() - cache_dt < timedelta(hours=CACHE_TTL_HOURS):
+                return cached_data.get("result")
+            else:
+                # Cache expiré, le supprimer
+                del ocr_cache[file_hash]
+    return None
+
+
+def set_cached_result(file_hash: str, result: Dict):
+    """Stocke un résultat dans le cache"""
+    ocr_cache[file_hash] = {
+        "result": result,
+        "timestamp": datetime.now().isoformat()
+    }
+    # Limiter la taille du cache (garder seulement les 1000 derniers)
+    if len(ocr_cache) > 1000:
+        # Supprimer les plus anciens
+        sorted_items = sorted(ocr_cache.items(), key=lambda x: x[1].get("timestamp", ""))
+        for key, _ in sorted_items[:100]:
+            del ocr_cache[key]
+
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
@@ -116,6 +159,26 @@ class OCRResponse(BaseModel):
     error: Optional[str] = None
     extracted_data: Optional[dict] = None
     confidence_scores: Optional[dict] = None
+    cached: Optional[bool] = False  # Indique si le résultat vient du cache
+
+
+class BatchOCRRequest(BaseModel):
+    files: List[str] = Field(..., description="Liste d'images encodées en base64")
+    language: str = Field(default="fra", description="Code langue pour OCR")
+
+
+class BatchOCRResponse(BaseModel):
+    success: bool
+    results: List[OCRResponse] = []
+    total_processed: int = 0
+    total_cached: int = 0
+
+
+class WebhookPayload(BaseModel):
+    invoice_id: str
+    invoice_data: dict
+    timestamp: str
+    source: str = "ocr_facture_api"
 
 
 def process_pdf_multi_page(pdf_data: bytes, language: str) -> dict:
@@ -408,6 +471,204 @@ def extract_invoice_items(lines: List[str], text_lower: str) -> List[Dict]:
     return items
 
 
+def detect_structured_tables(lines: List[str], ocr_data: Optional[Dict] = None) -> List[Dict]:
+    """
+    Détecte et extrait les tableaux structurés de la facture
+    Retourne une liste de tableaux avec leurs colonnes détectées automatiquement
+    """
+    tables = []
+    
+    # Chercher les sections qui ressemblent à des tableaux
+    # Un tableau commence généralement par un header avec plusieurs colonnes
+    # et contient plusieurs lignes avec des données alignées
+    
+    # Patterns pour détecter les headers de tableaux
+    header_keywords = [
+        ["description", "désignation", "article", "libellé", "item"],
+        ["quantité", "qté", "qty", "quant"],
+        ["prix", "pu", "unit", "unitaire"],
+        ["montant", "total", "amount", "somme"]
+    ]
+    
+    # Chercher les lignes qui contiennent plusieurs colonnes (séparées par espaces multiples ou |
+    table_start = None
+    table_end = None
+    
+    for i, line in enumerate(lines):
+        # Détecter si c'est un header de tableau (contient plusieurs mots-clés)
+        line_lower = line.lower()
+        header_matches = sum(1 for keyword_group in header_keywords 
+                            if any(kw in line_lower for kw in keyword_group))
+        
+        # Si on trouve au moins 2 groupes de mots-clés, c'est probablement un header
+        if header_matches >= 2:
+            table_start = i
+            # Chercher la fin du tableau (ligne vide ou ligne avec "Total")
+            for j in range(i + 1, min(i + 30, len(lines))):
+                next_line = lines[j].strip()
+                if not next_line or len(next_line) < 3:
+                    table_end = j
+                    break
+                # Si on trouve "Total" avec un nombre, c'est la fin
+                if re.search(r'total.*[\d,]+\.?\d*', next_line.lower()):
+                    table_end = j
+                    break
+            else:
+                table_end = min(i + 30, len(lines))
+            
+            if table_start is not None and table_end is not None:
+                # Extraire le tableau
+                table_lines = lines[table_start:table_end]
+                
+                # Détecter les colonnes (séparateurs: espaces multiples, |, ou tabulations)
+                if table_lines:
+                    header_line = table_lines[0]
+                    
+                    # Détecter les colonnes en cherchant les séparateurs
+                    # Essayer avec |
+                    if '|' in header_line:
+                        columns = [col.strip() for col in header_line.split('|')]
+                    # Essayer avec espaces multiples
+                    elif re.search(r'\s{2,}', header_line):
+                        columns = re.split(r'\s{2,}', header_line)
+                    else:
+                        # Détecter colonnes par position approximative
+                        # Pour simplification, on prend les premiers mots comme colonnes
+                        columns = header_line.split()[:5]  # Max 5 colonnes
+                    
+                    # Extraire les lignes de données
+                    rows = []
+                    for data_line in table_lines[1:]:
+                        if not data_line.strip() or len(data_line.strip()) < 5:
+                            continue
+                        
+                        # Parser la ligne selon le même séparateur que le header
+                        if '|' in data_line:
+                            row_data = [col.strip() for col in data_line.split('|')]
+                        elif re.search(r'\s{2,}', data_line):
+                            row_data = re.split(r'\s{2,}', data_line)
+                        else:
+                            row_data = data_line.split()[:len(columns)]
+                        
+                        # Créer un objet ligne avec les colonnes comme clés
+                        row_dict = {}
+                        for idx, col_name in enumerate(columns):
+                            if idx < len(row_data):
+                                row_dict[col_name.strip()] = row_data[idx].strip()
+                        
+                        if row_dict:
+                            rows.append(row_dict)
+                    
+                    if rows:
+                        tables.append({
+                            "header": columns,
+                            "rows": rows,
+                            "row_count": len(rows)
+                        })
+                
+                table_start = None
+                table_end = None
+    
+    return tables
+
+
+def extract_banking_info(text: str, lines: List[str]) -> Dict:
+    """
+    Extrait les coordonnées bancaires (IBAN, SWIFT/BIC, RIB)
+    """
+    banking_info = {
+        "iban": None,
+        "swift": None,
+        "bic": None,
+        "rib": None,
+        "account_number": None,
+        "bank_name": None
+    }
+    
+    text_upper = text.upper()
+    
+    # Pattern IBAN (format standard: 2 lettres + 2 chiffres + jusqu'à 30 caractères alphanumériques)
+    iban_patterns = [
+        r'\b([A-Z]{2}\d{2}[A-Z0-9]{4,30})\b',  # IBAN standard
+        r'IBAN\s*[:=]?\s*([A-Z]{2}\d{2}[A-Z0-9\s]{4,30})',  # IBAN: FR76...
+        r'IBAN\s*[:=]?\s*([A-Z0-9\s]{15,34})'  # IBAN sans préfixe
+    ]
+    
+    for pattern in iban_patterns:
+        match = re.search(pattern, text_upper.replace(' ', ''))
+        if match:
+            iban = match.group(1).replace(' ', '').replace('-', '')
+            # Valider la longueur IBAN (15-34 caractères)
+            if 15 <= len(iban) <= 34:
+                banking_info["iban"] = iban
+                break
+    
+    # Pattern SWIFT/BIC (8 ou 11 caractères: 4 lettres + 2 lettres + 2 caractères + 3 optionnels)
+    swift_patterns = [
+        r'\b([A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?)\b',  # SWIFT/BIC standard
+        r'SWIFT\s*[:=]?\s*([A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?)',  # SWIFT: ABCD...
+        r'BIC\s*[:=]?\s*([A-Z]{4}[A-Z]{2}[A-Z0-9]{2}([A-Z0-9]{3})?)'  # BIC: ABCD...
+    ]
+    
+    for pattern in swift_patterns:
+        match = re.search(pattern, text_upper)
+        if match:
+            swift = match.group(1)
+            # Valider la longueur SWIFT (8 ou 11 caractères)
+            if len(swift) == 8 or len(swift) == 11:
+                banking_info["swift"] = swift
+                banking_info["bic"] = swift  # BIC et SWIFT sont synonymes
+                break
+    
+    # Pattern RIB français (23 chiffres: 5+5+11+2)
+    rib_patterns = [
+        r'\b(\d{5}\s?\d{5}\s?[A-Z0-9]{11}\s?\d{2})\b',  # RIB avec espaces
+        r'RIB\s*[:=]?\s*(\d{5}\s?\d{5}\s?[A-Z0-9]{11}\s?\d{2})',  # RIB: 12345...
+        r'\b(\d{23})\b'  # RIB sans espaces (23 chiffres consécutifs)
+    ]
+    
+    for pattern in rib_patterns:
+        match = re.search(pattern, text_upper.replace(' ', ''))
+        if match:
+            rib = match.group(1).replace(' ', '')
+            if len(rib) == 23:
+                banking_info["rib"] = rib
+                break
+    
+    # Pattern numéro de compte (généralement long, avec des espaces ou tirets)
+    account_patterns = [
+        r'Compte\s*[:=]?\s*([\d\s\-]{10,20})',  # Compte: 1234 5678 9012
+        r'Account\s*[:=]?\s*([\d\s\-]{10,20})',  # Account: 1234 5678 9012
+        r'N°\s*Compte\s*[:=]?\s*([\d\s\-]{10,20})'  # N° Compte: 1234 5678 9012
+    ]
+    
+    for pattern in account_patterns:
+        match = re.search(pattern, text_upper)
+        if match:
+            account = match.group(1).replace(' ', '').replace('-', '')
+            if len(account) >= 10:
+                banking_info["account_number"] = account
+                break
+    
+    # Chercher le nom de la banque (près des coordonnées bancaires)
+    bank_keywords = ["banque", "bank", "banking", "bancaire"]
+    for i, line in enumerate(lines):
+        line_lower = line.lower()
+        if any(keyword in line_lower for keyword in bank_keywords):
+            # Prendre le nom de la banque (généralement avant le mot-clé ou après)
+            if i > 0:
+                prev_line = lines[i-1].strip()
+                if len(prev_line) > 3 and len(prev_line) < 50:
+                    banking_info["bank_name"] = prev_line
+            elif i < len(lines) - 1:
+                next_line = lines[i+1].strip()
+                if len(next_line) > 3 and len(next_line) < 50:
+                    banking_info["bank_name"] = next_line
+            break
+    
+    return banking_info
+
+
 def extract_invoice_data(ocr_result: dict) -> tuple[dict, dict]:
     """
     Extrait les données structurées de la facture depuis le résultat OCR
@@ -425,7 +686,9 @@ def extract_invoice_data(ocr_result: dict) -> tuple[dict, dict]:
         "vendor": None,
         "client": None,
         "items": [],
-        "currency": "EUR"
+        "currency": "EUR",
+        "tables": [],  # Tableaux structurés détectés
+        "banking_info": {}  # Coordonnées bancaires
     }
     
     confidence_scores = {
@@ -437,7 +700,9 @@ def extract_invoice_data(ocr_result: dict) -> tuple[dict, dict]:
         "invoice_number": 0.0,
         "vendor": 0.0,
         "client": 0.0,
-        "items": 0.0
+        "items": 0.0,
+        "tables": 0.0,
+        "banking_info": 0.0
     }
     
     parsed_text = ocr_result.get("text", "")
@@ -673,6 +938,27 @@ def extract_invoice_data(ocr_result: dict) -> tuple[dict, dict]:
         0.85 if client_found else 0.0
     )
     
+    # EXTRACTION DES TABLEAUX STRUCTURÉS
+    tables = detect_structured_tables(lines, ocr_result.get("data"))
+    extracted["tables"] = tables
+    confidence_scores["tables"] = calculate_confidence(
+        tables if tables else None,
+        len(tables),
+        0.85 if len(tables) > 0 else 0.0
+    )
+    
+    # EXTRACTION DES COORDONNÉES BANCAIRES
+    banking_info = extract_banking_info(parsed_text, lines)
+    extracted["banking_info"] = banking_info
+    
+    # Calculer le score de confiance pour les infos bancaires
+    banking_fields_found = sum(1 for v in banking_info.values() if v is not None)
+    confidence_scores["banking_info"] = calculate_confidence(
+        banking_info if banking_fields_found > 0 else None,
+        banking_fields_found,
+        0.9 if banking_fields_found > 0 else 0.0
+    )
+    
     return extracted, confidence_scores
 
 
@@ -680,14 +966,19 @@ def extract_invoice_data(ocr_result: dict) -> tuple[dict, dict]:
 async def root():
     return {
         "message": "OCR Facture API",
-        "version": "1.1.0",
+        "version": "1.2.0",
         "status": "running",
         "features": [
             "OCR extraction",
             "Invoice items extraction",
             "Confidence scoring",
             "Multi-page PDF support",
-            "Multi-language support"
+            "Multi-language support",
+            "Structured table detection",
+            "Banking info extraction (IBAN, SWIFT, RIB)",
+            "Batch processing",
+            "Result caching",
+            "Webhook integrations (Zapier, Make, Salesforce)"
         ]
     }
 
@@ -698,7 +989,8 @@ async def health_check():
     health_status = {
         "status": "healthy",
         "debug_mode": settings.debug_mode,
-        "api_version": "1.1.0"
+        "api_version": "1.2.0",
+        "cache_size": len(ocr_cache)
     }
     
     # Vérifier si Tesseract est disponible
@@ -752,6 +1044,20 @@ async def upload_and_ocr(
         # Lire le contenu du fichier
         file_data = await file.read()
         
+        # Vérifier le cache
+        file_hash = get_file_hash(file_data)
+        cached_result = get_cached_result(file_hash)
+        
+        if cached_result:
+            # Retourner le résultat depuis le cache
+            return OCRResponse(
+                success=True,
+                data=cached_result.get("data"),
+                extracted_data=cached_result.get("extracted_data"),
+                confidence_scores=cached_result.get("confidence_scores"),
+                cached=True
+            )
+        
         # Détecter si c'est un PDF
         is_pdf = file.content_type == "application/pdf" or (file.filename and file.filename.lower().endswith('.pdf'))
         
@@ -769,11 +1075,20 @@ async def upload_and_ocr(
         if "pages_processed" in ocr_result:
             response_data["pages_processed"] = ocr_result["pages_processed"]
         
+        # Stocker dans le cache
+        cache_data = {
+            "data": response_data,
+            "extracted_data": extracted_data,
+            "confidence_scores": confidence_scores
+        }
+        set_cached_result(file_hash, cache_data)
+        
         return OCRResponse(
             success=True,
             data=response_data,
             extracted_data=extracted_data,
-            confidence_scores=confidence_scores
+            confidence_scores=confidence_scores,
+            cached=False
         )
     
     except HTTPException:
@@ -808,6 +1123,20 @@ async def ocr_from_base64(
         
         file_data = base64.b64decode(image_base64)
         
+        # Vérifier le cache
+        file_hash = get_file_hash(file_data)
+        cached_result = get_cached_result(file_hash)
+        
+        if cached_result:
+            # Retourner le résultat depuis le cache
+            return OCRResponse(
+                success=True,
+                data=cached_result.get("data"),
+                extracted_data=cached_result.get("extracted_data"),
+                confidence_scores=cached_result.get("confidence_scores"),
+                cached=True
+            )
+        
         # Effectuer l'OCR
         ocr_result = perform_ocr(file_data, language, is_pdf=is_pdf)
         
@@ -822,11 +1151,20 @@ async def ocr_from_base64(
         if "pages_processed" in ocr_result:
             response_data["pages_processed"] = ocr_result["pages_processed"]
         
+        # Stocker dans le cache
+        cache_data = {
+            "data": response_data,
+            "extracted_data": extracted_data,
+            "confidence_scores": confidence_scores
+        }
+        set_cached_result(file_hash, cache_data)
+        
         return OCRResponse(
             success=True,
             data=response_data,
             extracted_data=extracted_data,
-            confidence_scores=confidence_scores
+            confidence_scores=confidence_scores,
+            cached=False
         )
     
     except Exception as e:
@@ -834,6 +1172,220 @@ async def ocr_from_base64(
             success=False,
             error=str(e)
         )
+
+
+@app.post("/ocr/batch", response_model=BatchOCRResponse)
+async def batch_ocr(batch_request: BatchOCRRequest):
+    """
+    Traite plusieurs factures en une seule requête (batch processing).
+    
+    **Paramètres:**
+    - `files`: Liste d'images encodées en base64
+    - `language`: Code langue pour OCR (fra, eng, deu, spa, ita, por). Défaut: fra
+    
+    **Limite:** Maximum 10 fichiers par requête
+    
+    **Retourne:**
+    - Liste des résultats OCR pour chaque fichier
+    - Nombre total traité
+    - Nombre servi depuis le cache
+    """
+    if len(batch_request.files) > 10:
+        raise HTTPException(
+            status_code=400,
+            detail="Maximum 10 fichiers par requête batch"
+        )
+    
+    results = []
+    total_cached = 0
+    
+    for file_base64 in batch_request.files:
+        try:
+            # Décoder l'image base64
+            is_pdf = False
+            if file_base64.startswith("data:image"):
+                file_base64 = file_base64.split(",")[1]
+            elif file_base64.startswith("data:application/pdf"):
+                is_pdf = True
+                file_base64 = file_base64.split(",")[1]
+            
+            file_data = base64.b64decode(file_base64)
+            
+            # Vérifier le cache
+            file_hash = get_file_hash(file_data)
+            cached_result = get_cached_result(file_hash)
+            
+            if cached_result:
+                results.append(OCRResponse(
+                    success=True,
+                    data=cached_result.get("data"),
+                    extracted_data=cached_result.get("extracted_data"),
+                    confidence_scores=cached_result.get("confidence_scores"),
+                    cached=True
+                ))
+                total_cached += 1
+            else:
+                # Effectuer l'OCR
+                ocr_result = perform_ocr(file_data, batch_request.language, is_pdf=is_pdf)
+                
+                # Extraire les données structurées
+                extracted_data, confidence_scores = extract_invoice_data(ocr_result)
+                
+                # Préparer les données de réponse
+                response_data = {
+                    "text": ocr_result["text"],
+                    "language": ocr_result["language"]
+                }
+                if "pages_processed" in ocr_result:
+                    response_data["pages_processed"] = ocr_result["pages_processed"]
+                
+                # Stocker dans le cache
+                cache_data = {
+                    "data": response_data,
+                    "extracted_data": extracted_data,
+                    "confidence_scores": confidence_scores
+                }
+                set_cached_result(file_hash, cache_data)
+                
+                results.append(OCRResponse(
+                    success=True,
+                    data=response_data,
+                    extracted_data=extracted_data,
+                    confidence_scores=confidence_scores,
+                    cached=False
+                ))
+        except Exception as e:
+            results.append(OCRResponse(
+                success=False,
+                error=str(e)
+            ))
+    
+    return BatchOCRResponse(
+        success=True,
+        results=results,
+        total_processed=len(batch_request.files),
+        total_cached=total_cached
+    )
+
+
+@app.post("/webhooks/zapier")
+async def webhook_zapier(request: Request):
+    """
+    Webhook pour intégration Zapier
+    Reçoit une facture et retourne les données extraites
+    """
+    try:
+        form = await request.form()
+        file = form.get("file")
+        
+        if not file:
+            raise HTTPException(status_code=400, detail="Fichier manquant")
+        
+        file_data = await file.read()
+        language = form.get("language", "fra")
+        
+        # Traiter la facture
+        is_pdf = file.content_type == "application/pdf" if hasattr(file, 'content_type') else False
+        ocr_result = perform_ocr(file_data, language, is_pdf=is_pdf)
+        extracted_data, confidence_scores = extract_invoice_data(ocr_result)
+        
+        # Générer un ID unique pour la facture
+        invoice_id = hashlib.md5(file_data).hexdigest()
+        
+        # Préparer le payload webhook
+        webhook_payload = {
+            "invoice_id": invoice_id,
+            "invoice_data": extracted_data,
+            "timestamp": datetime.now().isoformat(),
+            "source": "ocr_facture_api"
+        }
+        
+        return webhook_payload
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/webhooks/make")
+async def webhook_make(request: Request):
+    """
+    Webhook pour intégration Make (Integromat)
+    Reçoit une facture et retourne les données extraites
+    """
+    try:
+        form = await request.form()
+        file = form.get("file")
+        
+        if not file:
+            raise HTTPException(status_code=400, detail="Fichier manquant")
+        
+        file_data = await file.read()
+        language = form.get("language", "fra")
+        
+        # Traiter la facture
+        is_pdf = file.content_type == "application/pdf" if hasattr(file, 'content_type') else False
+        ocr_result = perform_ocr(file_data, language, is_pdf=is_pdf)
+        extracted_data, confidence_scores = extract_invoice_data(ocr_result)
+        
+        # Générer un ID unique pour la facture
+        invoice_id = hashlib.md5(file_data).hexdigest()
+        
+        # Préparer le payload webhook (format Make)
+        webhook_payload = {
+            "id": invoice_id,
+            "data": extracted_data,
+            "confidence": confidence_scores,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        return webhook_payload
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/webhooks/salesforce")
+async def webhook_salesforce(request: Request):
+    """
+    Webhook pour intégration Salesforce
+    Reçoit une facture et retourne les données au format Salesforce
+    """
+    try:
+        form = await request.form()
+        file = form.get("file")
+        
+        if not file:
+            raise HTTPException(status_code=400, detail="Fichier manquant")
+        
+        file_data = await file.read()
+        language = form.get("language", "fra")
+        
+        # Traiter la facture
+        is_pdf = file.content_type == "application/pdf" if hasattr(file, 'content_type') else False
+        ocr_result = perform_ocr(file_data, language, is_pdf=is_pdf)
+        extracted_data, confidence_scores = extract_invoice_data(ocr_result)
+        
+        # Préparer le payload Salesforce (format Salesforce Invoice object)
+        salesforce_payload = {
+            "InvoiceNumber": extracted_data.get("invoice_number"),
+            "TotalAmount": extracted_data.get("total_ttc") or extracted_data.get("total"),
+            "InvoiceDate": extracted_data.get("date"),
+            "VendorName": extracted_data.get("vendor"),
+            "CustomerName": extracted_data.get("client"),
+            "Items": [
+                {
+                    "Description": item.get("description"),
+                    "Quantity": item.get("quantity"),
+                    "UnitPrice": item.get("unit_price"),
+                    "TotalPrice": item.get("total")
+                }
+                for item in extracted_data.get("items", [])
+            ],
+            "BankingInfo": extracted_data.get("banking_info", {}),
+            "ConfidenceScores": confidence_scores
+        }
+        
+        return salesforce_payload
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/languages")
