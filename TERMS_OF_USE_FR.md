@@ -2,8 +2,6 @@
 
 ## 📋 CONDITIONS GÉNÉRALES D'UTILISATION
 
-**Dernière mise à jour :** [Date actuelle]
-
 En utilisant l'API OCR Facture France ("l'API", "le Service"), vous acceptez les présentes Conditions d'utilisation ("Conditions"). Si vous n'acceptez pas ces Conditions, vous ne devez pas utiliser l'API.
 
 ---
@@ -73,22 +71,32 @@ Il est strictement interdit d'utiliser l'API pour :
 
 Votre utilisation de l'API est soumise aux limites de votre plan d'abonnement :
 
-- **Plan Free** : 10 requêtes par jour
-- **Plan Basic** : 2000 requêtes par mois
-- **Plan Pro** : 10 000 requêtes par mois
-- **Plan Enterprise** : Selon contrat spécifique
+- **Plan BASIC (Gratuit)** : 100 requêtes par mois
+  - Batch processing désactivé (1 facture = 1 requête)
+  - OCR basique uniquement (pas de compliance FR, pas de Factur-X)
+- **Plan PRO** : 20 000 requêtes par mois ($15/mois)
+  - Batch processing activé (jusqu'à 10 factures par requête)
+  - Compliance FR + Factur-X inclus
+- **Plan ULTRA** : 80 000 requêtes par mois ($59/mois)
+  - Batch processing activé (jusqu'à 10 factures par requête)
+  - Compliance FR + Factur-X inclus
+- **Plan MEGA** : 250 000 requêtes par mois ($149/mois)
+  - Batch processing activé (jusqu'à 10 factures par requête)
+  - Compliance FR + Factur-X inclus
 
 Le dépassement des quotas peut entraîner la suspension temporaire ou permanente de votre accès.
 
 ### 5.2 Limites techniques
 
 - **Taille de fichier** : Maximum 10 Mo par fichier (par défaut)
-- **Traitement par lot** : Maximum 10 fichiers par requête batch
+- **Traitement par lot** : 
+  - Plan BASIC : Batch désactivé (1 facture = 1 requête obligatoire)
+  - Plans PRO/ULTRA/MEGA : Maximum 10 fichiers par requête batch
 - **Taux de requêtes** : Limites de débit selon votre plan (rate limiting)
 
 ### 5.3 Droit de modification
 
-Nous nous réservons le droit de modifier les limites d'utilisation à tout moment, avec un préavis raisonnable pour les utilisateurs payants.
+Nous nous réservons le droit de modifier les limites d'utilisation à tout moment, avec un préavis raisonnable pour les utilisateurs des plans PRO, ULTRA ou MEGA.
 
 ---
 
@@ -207,7 +215,7 @@ Dans les limites permises par la loi applicable, le fournisseur de l'API ne sera
 
 ### 9.2 Limite de responsabilité
 
-Dans tous les cas, la responsabilité totale du fournisseur de l'API est limitée au montant que vous avez payé pour l'utilisation de l'API au cours des 12 derniers mois, ou à 100€ si vous utilisez le plan gratuit.
+Dans tous les cas, la responsabilité totale du fournisseur de l'API est limitée au montant que vous avez payé pour l'utilisation de l'API au cours des 12 derniers mois, ou à 100€ si vous utilisez le plan BASIC (gratuit).
 
 ### 9.3 Exceptions légales
 
@@ -238,9 +246,9 @@ Nous nous réservons le droit de modifier ces Conditions d'utilisation à tout m
 ### 11.2 Notification des modifications
 
 - Pour les modifications majeures, nous vous notifierons :
-  - Par email (pour utilisateurs payants)
+  - Par email (pour utilisateurs des plans PRO, ULTRA ou MEGA)
   - Via la plateforme RapidAPI
-  - Par mise à jour de la date "Dernière mise à jour" en haut de ce document
+  - Par mise à jour de ce document
 
 ### 11.3 Acceptation des modifications
 
@@ -263,9 +271,10 @@ Nous nous réservons le droit de suspendre ou résilier votre accès à l'API im
 
 - Violation de ces Conditions
 - Utilisation frauduleuse ou abusive
-- Non-paiement (pour plans payants)
+- Non-paiement (pour plans PRO, ULTRA, MEGA)
 - Activité illégale
 - Raisons de sécurité
+- Dépassement répété des quotas de votre plan
 
 ### 12.3 Conséquences de la résiliation
 
@@ -345,22 +354,4 @@ Pour signaler un abus ou une violation de ces Conditions :
 En utilisant l'API, vous reconnaissez avoir lu, compris et accepté ces Conditions d'utilisation dans leur intégralité.
 
 Si vous n'acceptez pas ces Conditions, vous ne devez pas utiliser l'API.
-
----
-
-**Date d'entrée en vigueur :** [Date de publication]
-
-**Dernière mise à jour :** [Date actuelle]
-
----
-
-## 📝 NOTE IMPORTANTE
-
-Ces Conditions d'utilisation sont fournies à titre informatif. Pour une utilisation professionnelle ou commerciale, il est recommandé de :
-
-1. Faire examiner ces Conditions par un avocat
-2. Adapter certaines clauses selon vos besoins spécifiques
-3. Vérifier la conformité avec la législation de votre juridiction
-
-Le fournisseur de l'API se réserve le droit de modifier ces Conditions à tout moment selon les évolutions légales et réglementaires.
 

@@ -2,40 +2,52 @@
 
 ## 📊 Plans de tarification RapidAPI
 
-### Plan Free (Gratuit)
-- **Prix** : 0€ / mois
-- **Quota** : 10 requêtes / jour
-- **Limite mensuelle** : ~300 requêtes / mois
-- **Idéal pour** : Tests, développement, petits projets
+### Plan BASIC (Gratuit)
+- **Prix** : $0 / mois
+- **Quota** : 100 requêtes / mois
+- **Limite quotidienne** : ~3-4 requêtes / jour (moyenne)
+- **Factures max** : 100 factures / mois (batch désactivé)
+- **Fonctionnalités** : OCR basique uniquement (pas de compliance FR, pas de Factur-X)
+- **Idéal pour** : Tests, développement, évaluation de l'API
 - **Support** : Documentation uniquement
+- **⚠️ Limitation** : Batch processing désactivé (1 facture = 1 requête obligatoire)
+- **🏆 Positionnement** : Suffisant pour tester, pas pour production (force upgrade pour usage réel)
 
 ---
 
-### Plan Basic
-- **Prix** : 49€ / mois
-- **Quota** : 2 000 requêtes / mois
-- **Limite quotidienne** : ~66 requêtes / jour (moyenne)
-- **Idéal pour** : Startups, petites entreprises, projets pilotes
+### Plan PRO
+- **Prix** : $15 / mois
+- **Quota** : 20 000 requêtes / mois
+- **Limite quotidienne** : ~666 requêtes / jour (moyenne)
+- **Factures max** : ~200 000 factures / mois (avec batch 10 fichiers)
+- **Fonctionnalités** : OCR complet + Compliance FR + Factur-X + Batch activé
+- **Idéal pour** : Startups, petites entreprises, projets pilotes, PME
 - **Support** : Email (réponse sous 48h)
+- **🏆 Positionnement** : **-24% moins cher** que Microsoft OCR ($19.90) avec **+33% plus de requêtes** (20k vs 15k) + fonctionnalités françaises uniques
 
 ---
 
-### Plan Pro
-- **Prix** : 149€ / mois
-- **Quota** : 10 000 requêtes / mois
-- **Limite quotidienne** : ~333 requêtes / jour (moyenne)
-- **Idéal pour** : PME, cabinets comptables moyens, intégrations ERP
+### Plan ULTRA
+- **Prix** : $59 / mois
+- **Quota** : 80 000 requêtes / mois
+- **Limite quotidienne** : ~2 666 requêtes / jour (moyenne)
+- **Factures max** : ~800 000 factures / mois (avec batch 10 fichiers)
+- **Fonctionnalités** : OCR complet + Compliance FR + Factur-X + Batch activé
+- **Idéal pour** : PME, cabinets comptables moyens, intégrations ERP, volumes moyens
 - **Support** : Email prioritaire (réponse sous 24h)
+- **🏆 Positionnement** : **-21% moins cher** que Microsoft OCR ($74.90) avec **+14% plus de requêtes** (80k vs 70k) + fonctionnalités françaises uniques
 
 ---
 
-### Plan Enterprise
-- **Prix** : Sur mesure (contact commercial)
-- **Quota** : >50 000 requêtes / mois (selon contrat)
-- **Limite quotidienne** : Personnalisée
-- **Idéal pour** : Grandes entreprises, gros volumes, besoins spécifiques
-- **Support** : Support dédié, SLA garanti, DPA disponible
-- **Options** : Facturation personnalisée, quotas flexibles, support technique dédié
+### Plan MEGA
+- **Prix** : $149 / mois
+- **Quota** : 250 000 requêtes / mois
+- **Limite quotidienne** : ~8 333 requêtes / jour (moyenne)
+- **Factures max** : ~2 500 000 factures / mois (avec batch 10 fichiers)
+- **Fonctionnalités** : OCR complet + Compliance FR + Factur-X + Batch activé
+- **Idéal pour** : Grandes entreprises, gros volumes, besoins intensifs
+- **Support** : Email prioritaire (réponse sous 24h)
+- **🏆 Positionnement** : **-25% moins cher** que Microsoft OCR ($199.90) avec **+25% plus de requêtes** (250k vs 200k) + fonctionnalités françaises uniques
 
 ---
 
@@ -43,22 +55,24 @@
 
 ### Limites par requête
 
-| Type de limite | Valeur | Description |
-|----------------|--------|-------------|
-| **Taille fichier** | 10 Mo | Maximum par fichier uploadé |
-| **Traitement batch** | 10 fichiers | Maximum de fichiers par requête `/ocr/batch` |
-| **Format fichiers** | JPEG, PNG, PDF | Formats supportés |
-| **Pages PDF** | Illimité | Support PDF multi-pages (toutes les pages traitées) |
-| **Timeout OCR** | 30 secondes | Timeout pour traitement OCR (fichiers très volumineux) |
+| Type de limite | BASIC (Gratuit) | PRO / ULTRA / MEGA | Description |
+|----------------|-----------------|-------------------|-------------|
+| **Taille fichier** | 10 Mo | 10 Mo | Maximum par fichier uploadé |
+| **Traitement batch** | ❌ **Désactivé** | ✅ **10 fichiers max** | Plan BASIC : 1 facture = 1 requête obligatoire |
+| **Format fichiers** | JPEG, PNG, PDF | JPEG, PNG, PDF | Formats supportés |
+| **Pages PDF** | Illimité | Illimité | Support PDF multi-pages (toutes les pages traitées) |
+| **Timeout OCR** | 30 secondes | 30 secondes | Timeout pour traitement OCR (fichiers très volumineux) |
+| **Compliance FR** | ❌ Désactivé | ✅ Activé | Validation TVA, SIREN/SIRET, mentions légales |
+| **Factur-X** | ❌ Désactivé | ✅ Activé | Génération, parsing, validation Factur-X EN16931 |
 
 ### Limites de débit (Rate Limiting)
 
-| Plan | Limite | Description |
-|------|--------|-------------|
-| **Free** | 10 req/jour | Pas de limite par minute (quotidienne uniquement) |
-| **Basic** | ~66 req/jour | Limite quotidienne moyenne (peut varier) |
-| **Pro** | ~333 req/jour | Limite quotidienne moyenne (peut varier) |
-| **Enterprise** | Personnalisé | Selon contrat |
+| Plan | Limite requêtes/jour | Factures max/jour | Description |
+|------|---------------------|-------------------|-------------|
+| **BASIC** | ~3-4 req/jour | ~3-4 factures/jour | Batch désactivé (1 facture = 1 requête) |
+| **PRO** | ~666 req/jour | ~6 666 factures/jour | Batch activé (10 factures/requête) |
+| **ULTRA** | ~2 666 req/jour | ~26 666 factures/jour | Batch activé (10 factures/requête) |
+| **MEGA** | ~8 333 req/jour | ~83 333 factures/jour | Batch activé (10 factures/requête) |
 
 **Note** : Les limites de débit peuvent être ajustées automatiquement selon la charge du serveur.
 
@@ -68,41 +82,51 @@
 
 ### Coût effectif par requête
 
-| Plan | Coût mensuel | Requêtes / mois | Coût par requête |
-|------|--------------|-----------------|------------------|
-| **Free** | 0€ | 300 | **0€** |
-| **Basic** | 49€ | 2 000 | **0.0245€** (~2.5 centimes) |
-| **Pro** | 149€ | 10 000 | **0.0149€** (~1.5 centimes) |
-| **Enterprise** | Sur mesure | >50 000 | **Négociable** |
+| Plan | Coût mensuel | Requêtes / mois | Factures max/mois | Coût par requête | Coût par facture |
+|------|--------------|-----------------|-------------------|------------------|-----------------|
+| **BASIC** | $0 | 100 | **100** (batch désactivé) | **$0** | **$0** |
+| **PRO** | $15 | 20 000 | **~200 000** (batch 10) | **$0.00075** | **$0.000075** (~0.0075 centimes) |
+| **ULTRA** | $59 | 80 000 | **~800 000** (batch 10) | **$0.00074** | **$0.000074** (~0.0074 centimes) |
+| **MEGA** | $149 | 250 000 | **~2 500 000** (batch 10) | **$0.00060** | **$0.000060** (~0.006 centimes) |
+
+**Note** : Les plans payants (PRO+) permettent le batch processing (10 factures par requête), ce qui multiplie le nombre de factures traitées par 10. Le plan BASIC limite à 1 facture par requête.
+
+**Comparaison avec Microsoft OCR (concurrence principale) :**
+- Microsoft PRO : $19.90 pour 15k → **$0.00133/req**
+- **Votre PRO** : $15 pour 20k → **$0.00075/req** → **-44% moins cher par requête** 🏆
 
 ---
 
 ## 🎯 Recommandations par usage
 
-### Usage occasionnel (< 100 factures/mois)
-**→ Plan Free**
-- Parfait pour tester l'API
-- 10 factures/jour suffisant
+### Usage test / développement (< 100 factures/mois)
+**→ Plan BASIC (Gratuit)**
+- 100 requêtes/mois = ~3-4 factures/jour
+- **Batch désactivé** (1 facture = 1 requête)
+- OCR basique uniquement (pas de compliance, pas de Factur-X)
+- Parfait pour tester et évaluer l'API
 - Pas d'engagement
+- **⚠️ Limité : pas suffisant pour production**
 
-### Usage régulier (100-500 factures/mois)
-**→ Plan Basic (49€/mois)**
-- ~66 factures/jour
-- Idéal pour petites entreprises
-- Bon rapport qualité/prix
+### Usage régulier (500-2 000 factures/mois)
+**→ Plan PRO ($15/mois)**
+- 20 000 requêtes/mois = ~666 factures/jour
+- Idéal pour petites entreprises et startups
+- **Meilleur rapport qualité/prix du marché**
+- **-24% moins cher que Microsoft OCR**
 
-### Usage intensif (500-2000 factures/mois)
-**→ Plan Pro (149€/mois)**
-- ~333 factures/jour
-- Idéal pour PME et cabinets moyens
+### Usage intensif (2 000-10 000 factures/mois)
+**→ Plan ULTRA ($59/mois)**
+- 80 000 requêtes/mois = ~2 666 factures/jour
+- Idéal pour PME et cabinets comptables moyens
 - Support prioritaire
+- **-21% moins cher que Microsoft OCR avec +14% de requêtes**
 
-### Usage professionnel (>2000 factures/mois)
-**→ Plan Enterprise**
-- Quotas personnalisés
-- Support dédié
-- SLA garanti
-- Contact commercial pour tarifs dégressifs
+### Usage professionnel (>10 000 factures/mois)
+**→ Plan MEGA ($149/mois)**
+- 250 000 requêtes/mois = ~8 333 factures/jour
+- Pour grandes entreprises et gros volumes
+- **-25% moins cher que Microsoft OCR avec +25% de requêtes**
 
 ---
 
@@ -135,31 +159,43 @@ L'API met en cache les résultats pendant **24 heures**. Si vous traitez plusieu
 
 **Économie** : Jusqu'à 100% si vous retraitez les mêmes fichiers.
 
-### Traitement par lot
+### Traitement par lot (Plans PRO+ uniquement)
 
-Utilisez `/ocr/batch` pour traiter plusieurs factures :
+⚠️ **Le batch processing est désactivé sur le plan BASIC gratuit.**
+
+Sur les plans payants (PRO, ULTRA, MEGA), utilisez `/ocr/batch` pour traiter plusieurs factures :
 - **10 factures** = **1 requête** (au lieu de 10 requêtes séparées)
 - **Économie** : 90% de requêtes économisées
 
 **Exemple** :
-- Traiter 100 factures une par une = 100 requêtes
-- Traiter 100 factures par batch (10 groupes) = 10 requêtes
-- **Économie : 90 requêtes**
+- Plan BASIC : Traiter 100 factures = 100 requêtes (batch désactivé)
+- Plan PRO+ : Traiter 100 factures par batch (10 groupes) = 10 requêtes
+- **Économie : 90 requêtes avec les plans payants**
 
 ### Planification intelligente
 
-Pour le plan Free (10 req/jour) :
-- Traiter les factures urgentes en priorité
-- Grouper les factures non urgentes pour traitement batch
-- Utiliser le cache pour éviter les retraitements
+Pour le plan BASIC (100 req/mois) :
+- ⚠️ **Batch désactivé** : Traitez les factures une par une
+- Utilisez le cache pour éviter les retraitements
+- Priorisez les factures importantes (100 factures max/mois)
+
+Pour les plans payants (PRO+) :
+- Groupez les factures non urgentes pour traitement batch (économie 90%)
+- Utilisez le cache pour éviter les retraitements
+- Traitez jusqu'à 10 factures par requête batch
 
 ---
 
 ## 📊 Comparaison des plans
 
-| Fonctionnalité | Free | Basic | Pro | Enterprise |
-|----------------|------|-------|-----|------------|
-| **Requêtes/mois** | 300 | 2 000 | 10 000 | >50 000 |
+| Fonctionnalité | BASIC | PRO | ULTRA | MEGA |
+|----------------|-------|-----|-------|------|
+| **Requêtes/mois** | 100 | 20 000 | 80 000 | 250 000 |
+| **Factures max/mois** | 100 | ~200 000 | ~800 000 | ~2 500 000 |
+| **Prix/mois** | $0 | $15 | $59 | $149 |
+| **Batch processing** | ❌ Désactivé | ✅ 10 fichiers | ✅ 10 fichiers | ✅ 10 fichiers |
+| **Compliance FR** | ❌ | ✅ | ✅ | ✅ |
+| **Factur-X** | ❌ | ✅ | ✅ | ✅ |
 | **Support** | Doc | Email | Email prioritaire | Dédié + SLA |
 | **Temps de réponse** | - | 48h | 24h | <4h |
 | **SLA disponibilité** | - | - | - | 99.9% |
@@ -224,75 +260,198 @@ Les endpoints suivants **ne consomment pas** de quota :
 
 ## 💰 Exemples de coûts réels
 
-### Scénario 1 : Cabinet comptable petit (100 factures/mois)
+### Scénario 1 : Test / Développement (< 100 factures/mois)
 
-- **Factures à traiter** : 100/mois
-- **Plan recommandé** : Free (10/jour = 300/mois)
-- **Coût mensuel** : **0€**
-- **Coût par facture** : **0€**
+- **Factures à traiter** : 50-100/mois
+- **Plan recommandé** : BASIC (100/mois)
+- **Coût mensuel** : **$0**
+- **Coût par facture** : **$0**
+- **Limitation** : Batch désactivé, OCR basique uniquement
 
-✅ **Gratuit !**
-
----
-
-### Scénario 2 : PME moyenne (500 factures/mois)
-
-- **Factures à traiter** : 500/mois
-- **Plan recommandé** : Basic (2 000/mois)
-- **Coût mensuel** : **49€**
-- **Coût par facture** : **0.098€** (~10 centimes)
-
-✅ **Très économique**
+✅ **Gratuit pour tester ! Upgrade nécessaire pour production**
 
 ---
 
-### Scénario 3 : Cabinet comptable moyen (1 500 factures/mois)
+### Scénario 2 : PME moyenne (1 000 factures/mois)
 
-- **Factures à traiter** : 1 500/mois
-- **Plan recommandé** : Pro (10 000/mois)
-- **Coût mensuel** : **149€**
-- **Coût par facture** : **0.099€** (~10 centimes)
+- **Factures à traiter** : 1 000/mois
+- **Plan recommandé** : PRO (20 000/mois)
+- **Coût mensuel** : **$15**
+- **Coût par facture** : **$0.015** (~1.5 centimes)
 
-✅ **Bon rapport qualité/prix**
+✅ **Meilleur prix du marché** (Microsoft : $19.90 pour moins de requêtes)
 
 ---
 
-### Scénario 4 : Grande entreprise (5 000 factures/mois)
+### Scénario 3 : Cabinet comptable moyen (5 000 factures/mois)
 
 - **Factures à traiter** : 5 000/mois
-- **Plan recommandé** : Enterprise (négocié)
-- **Coût mensuel** : **Négociable** (ex: 300-500€)
-- **Coût par facture** : **0.06-0.10€** (selon négociation)
+- **Plan recommandé** : ULTRA (80 000/mois)
+- **Coût mensuel** : **$59**
+- **Coût par facture** : **$0.012** (~1.2 centimes)
 
-✅ **Tarifs dégressifs pour gros volumes**
+✅ **-21% moins cher que Microsoft OCR** avec plus de requêtes
+
+---
+
+### Scénario 4 : Grande entreprise (20 000 factures/mois)
+
+- **Factures à traiter** : 20 000/mois
+- **Plan recommandé** : MEGA (250 000/mois)
+- **Coût mensuel** : **$149**
+- **Coût par facture** : **$0.0075** (~0.75 centimes)
+
+✅ **-25% moins cher que Microsoft OCR** avec +25% de requêtes
 
 ---
 
 ## 🎯 Recommandations stratégiques
 
 ### Pour tester l'API
-→ **Plan Free** (0€)
+→ **Plan BASIC** ($0/mois)
+- 100 requêtes/mois = 100 factures gratuites
+- **Batch désactivé** (1 facture = 1 requête)
+- OCR basique uniquement (pas de compliance, pas de Factur-X)
 - Testez pendant 1-2 semaines
 - Validez que l'API répond à vos besoins
-- Passez ensuite à un plan payant si nécessaire
+- **⚠️ Upgrade nécessaire pour production** (plans payants avec batch + fonctionnalités avancées)
 
 ### Pour production légère
-→ **Plan Basic** (49€/mois)
+→ **Plan PRO** ($15/mois)
 - Parfait pour démarrer en production
-- 2 000 requêtes/mois suffisent pour la plupart des petites entreprises
-- Upgrade facile vers Pro si besoin
+- 20 000 requêtes/mois = ~200 000 factures/mois avec batch
+- **Batch activé** (10 factures par requête) = économie 90%
+- **Compliance FR + Factur-X** inclus
+- **Meilleur prix du marché** (-24% vs Microsoft OCR + fonctionnalités françaises)
+- Upgrade facile vers ULTRA si besoin
 
 ### Pour production sérieuse
-→ **Plan Pro** (149€/mois)
-- Pour PME et cabinets comptables
-- 10 000 requêtes/mois = marge de sécurité
+→ **Plan ULTRA** ($59/mois)
+- Pour PME et cabinets comptables moyens
+- 80 000 requêtes/mois = ~800 000 factures/mois avec batch
+- **Batch activé** (10 factures par requête)
+- **Compliance FR + Factur-X** inclus
 - Support prioritaire inclus
+- **-21% moins cher que Microsoft OCR + fonctionnalités françaises**
 
 ### Pour gros volumes
-→ **Plan Enterprise**
-- Contactez-nous pour négocier tarifs dégressifs
-- Quotas personnalisés selon vos besoins
-- Support dédié et SLA garanti
+→ **Plan MEGA** ($149/mois)
+- Pour grandes entreprises et volumes intensifs
+- 250 000 requêtes/mois = ~2 500 000 factures/mois avec batch
+- **Batch activé** (10 factures par requête)
+- **Compliance FR + Factur-X** inclus
+- **-25% moins cher que Microsoft OCR avec +25% de requêtes + fonctionnalités françaises**
+- Support prioritaire
+
+---
+
+## 💡 Pourquoi payer si le code est disponible sur GitHub ?
+
+**Bonne question !** Le code source est disponible sur GitHub, mais voici pourquoi utiliser l'API hébergée reste le meilleur choix pour la plupart des utilisateurs :
+
+### ⚡ Commodité et gain de temps
+
+**Option 1 : Utiliser l'API hébergée (5 minutes)**
+- Obtenir une clé API RapidAPI
+- Faire votre première requête
+- C'est tout ! ✅
+
+**Option 2 : Auto-héberger (plusieurs jours/heures)**
+- Installer et configurer Tesseract OCR
+- Configurer l'environnement Python
+- Installer toutes les dépendances
+- Configurer le serveur (Railway, AWS, etc.)
+- Gérer la sécurité (authentification, rate limiting)
+- Configurer le monitoring et les logs
+- Mettre en place la scalabilité
+- **Temps estimé : 8-16 heures de travail**
+
+### 💰 Coût réel comparé
+
+| Coût | API Hébergée (PRO) | Auto-hébergement |
+|------|-------------------|------------------|
+| **Abonnement** | $15/mois | $0 |
+| **Infrastructure serveur** | $0 (inclus) | **$20-100/mois** (Railway, AWS, etc.) |
+| **Maintenance mensuelle** | $0 (inclus) | **2-4h/mois** (~$50-200) |
+| **Mises à jour** | $0 (automatiques) | **1-2h/mois** (~$25-100) |
+| **Support technique** | $0 (inclus) | **Votre temps** |
+| **Monitoring** | $0 (inclus) | **$10-50/mois** (outils) |
+| **Total réel** | **$15/mois** | **$105-450/mois** + votre temps |
+
+### 🚀 Avantages de l'API hébergée
+
+#### 1. **Scalabilité automatique**
+- L'API s'adapte automatiquement à votre charge
+- Pas besoin de gérer les pics de trafic
+- Infrastructure optimisée déjà en place
+
+#### 2. **Mises à jour automatiques**
+- Nouvelles fonctionnalités ajoutées régulièrement
+- Corrections de bugs automatiques
+- Pas besoin de maintenir votre fork
+
+#### 3. **Fiabilité et disponibilité**
+- **99.9% uptime** garanti (plans Enterprise)
+- Infrastructure redondante
+- Pas de panne de serveur à gérer
+
+#### 4. **Support inclus**
+- Support email pour les plans payants
+- Documentation complète et à jour
+- Communauté GitHub pour les questions
+
+#### 5. **Sécurité gérée**
+- Authentification sécurisée
+- Rate limiting automatique
+- Protection DDoS
+- Conformité RGPD gérée
+
+#### 6. **Pas de compétences techniques requises**
+- Utilisable par des non-développeurs
+- Intégration simple (API REST)
+- Exemples de code fournis
+
+### 🎯 Quand auto-héberger a du sens
+
+Auto-héberger peut être intéressant si :
+- ✅ Vous avez **plus de 500 000 factures/mois** (économies potentielles)
+- ✅ Vous avez une **équipe DevOps dédiée**
+- ✅ Vous avez besoin de **modifications spécifiques** du code
+- ✅ Vous avez des **exigences de conformité strictes** (données hébergées on-premise)
+
+### 📊 Comparaison concrète
+
+**Cas d'usage : PME avec 1 000 factures/mois**
+
+**Option API hébergée (PRO) :**
+- Coût : **$15/mois**
+- Temps de setup : **5 minutes**
+- Maintenance : **0 heure/mois**
+- **Total annuel : $180**
+
+**Option Auto-hébergement :**
+- Coût infrastructure : **$50/mois** (minimum)
+- Temps de setup : **8 heures** (valeur : ~$400)
+- Maintenance : **2h/mois** (valeur : ~$100/mois)
+- **Total annuel : $1 800** + votre temps précieux
+
+**Économie avec l'API : $1 620/an + gain de temps**
+
+### ✅ Conclusion
+
+**Le code est disponible pour :**
+- ✅ Comprendre comment ça fonctionne
+- ✅ Apprendre et contribuer
+- ✅ Auto-héberger si vraiment nécessaire
+- ✅ Personnaliser pour des besoins spécifiques
+
+**Mais l'API hébergée reste le meilleur choix pour :**
+- ✅ **95% des utilisateurs** (gain de temps + économies)
+- ✅ **Démarrage rapide** (5 minutes vs 8 heures)
+- ✅ **Fiabilité** (infrastructure professionnelle)
+- ✅ **Économies** (moins cher que l'auto-hébergement pour la plupart)
+
+**C'est comme Linux : le code est libre, mais la plupart des entreprises paient Red Hat/Ubuntu pour le support et la maintenance !** 🐧
 
 ---
 

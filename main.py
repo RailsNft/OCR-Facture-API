@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Request, Body
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Request, Body, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import base64
@@ -15,6 +15,16 @@ import json
 from datetime import datetime, timedelta
 from compliance import extract_compliance_data, detect_siren_siret, detect_vat_intracom, validate_vies, enrich_siren_siret, validate_french_vat
 from facturx import generate_facturx_xml, parse_facturx_from_pdf, parse_facturx_xml, validate_facturx_xml
+from rate_limiting import rate_limit_middleware
+from monitoring import monitoring_middleware, get_metrics, log_cache_hit, log_cache_miss
+from image_preprocessing import preprocess_image, should_preprocess
+from cache_redis import (
+    init_cache_backend,
+    get_cached,
+    set_cached,
+    get_cache_info,
+    get_cache_backend
+)
 try:
     import fitz  # PyMuPDF
     PDF_SUPPORT = True
@@ -80,9 +90,47 @@ def custom_openapi():
 
 app.openapi = custom_openapi
 
-# Cache simple en mémoire (pour production, utiliser Redis)
-ocr_cache: Dict[str, Dict[str, Any]] = {}
+# Créer le router pour la version v1
+v1_router = APIRouter(prefix="/v1", tags=["v1"])
+
+# Initialiser le cache backend (Redis ou mémoire)
+init_cache_backend(
+    redis_url=settings.redis_url,
+    redis_db=settings.redis_db,
+    force_memory=settings.force_memory_cache
+)
+
 CACHE_TTL_HOURS = 24  # Cache valide 24h
+IDEMPOTENCY_TTL_HOURS = 24  # Les clés idempotence sont valides 24h
+
+# Cache mémoire de fallback pour idempotence (peut être migré vers Redis aussi)
+idempotency_cache: Dict[str, Dict[str, Any]] = {}
+
+
+# Exceptions personnalisées pour codes d'erreur spécifiques
+class ComplianceError(HTTPException):
+    """Erreur 422 - Erreur de conformité ou validation"""
+    def __init__(self, detail: str):
+        super().__init__(status_code=422, detail=detail)
+
+
+class DuplicateError(HTTPException):
+    """Erreur 409 - Doublon détecté (idempotence)"""
+    def __init__(self, detail: str, existing_result: Optional[Dict] = None):
+        super().__init__(status_code=409, detail=detail)
+        self.existing_result = existing_result
+
+
+class TimeoutError(HTTPException):
+    """Erreur 504 - Timeout lors du traitement OCR"""
+    def __init__(self, detail: str = "Le traitement OCR a dépassé le délai maximum"):
+        super().__init__(status_code=504, detail=detail)
+
+
+class EnrichmentError(HTTPException):
+    """Erreur 424 - Échec de l'enrichissement (ex: API Sirene)"""
+    def __init__(self, detail: str):
+        super().__init__(status_code=424, detail=detail)
 
 
 def get_file_hash(file_data: bytes) -> str:
@@ -91,33 +139,67 @@ def get_file_hash(file_data: bytes) -> str:
 
 
 def get_cached_result(file_hash: str) -> Optional[Dict]:
-    """Récupère un résultat depuis le cache s'il existe et est valide"""
-    if file_hash in ocr_cache:
-        cached_data = ocr_cache[file_hash]
-        # Vérifier si le cache n'est pas expiré
+    """Récupère un résultat depuis le cache (Redis ou mémoire)"""
+    cache_key = f"ocr_result:{file_hash}"
+    cached_data = get_cached(cache_key)
+    
+    if cached_data:
+        # Vérifier si le cache n'est pas expiré (si backend mémoire)
         cache_time = cached_data.get("timestamp")
         if cache_time:
             cache_dt = datetime.fromisoformat(cache_time)
             if datetime.now() - cache_dt < timedelta(hours=CACHE_TTL_HOURS):
                 return cached_data.get("result")
             else:
-                # Cache expiré, le supprimer
-                del ocr_cache[file_hash]
+                # Cache expiré (pour mémoire backend)
+                from cache_redis import delete_cached
+                delete_cached(cache_key)
+        else:
+            # Redis gère l'expiration automatiquement
+            return cached_data.get("result")
+    
     return None
 
 
 def set_cached_result(file_hash: str, result: Dict):
-    """Stocke un résultat dans le cache"""
-    ocr_cache[file_hash] = {
+    """Stocke un résultat dans le cache (Redis ou mémoire)"""
+    cache_key = f"ocr_result:{file_hash}"
+    cache_data = {
         "result": result,
         "timestamp": datetime.now().isoformat()
     }
-    # Limiter la taille du cache (garder seulement les 1000 derniers)
-    if len(ocr_cache) > 1000:
-        # Supprimer les plus anciens
-        sorted_items = sorted(ocr_cache.items(), key=lambda x: x[1].get("timestamp", ""))
-        for key, _ in sorted_items[:100]:
-            del ocr_cache[key]
+    set_cached(cache_key, cache_data, ttl_hours=CACHE_TTL_HOURS)
+
+
+def check_idempotency(request: Request) -> Optional[Dict]:
+    """Vérifie si une Idempotency-Key existe déjà dans le cache"""
+    idempotency_key = request.headers.get("Idempotency-Key")
+    if idempotency_key and idempotency_key in idempotency_cache:
+        cached_response = idempotency_cache[idempotency_key]
+        cache_time = cached_response.get("timestamp")
+        if cache_time:
+            cache_dt = datetime.fromisoformat(cache_time)
+            if datetime.now() - cache_dt < timedelta(hours=IDEMPOTENCY_TTL_HOURS):
+                return cached_response.get("result")
+            else:
+                # Cache expiré, le supprimer
+                del idempotency_cache[idempotency_key]
+    return None
+
+
+def store_idempotency(request: Request, result: Dict):
+    """Stocke un résultat dans le cache d'idempotence"""
+    idempotency_key = request.headers.get("Idempotency-Key")
+    if idempotency_key:
+        idempotency_cache[idempotency_key] = {
+            "result": result,
+            "timestamp": datetime.now().isoformat()
+        }
+        # Limiter la taille du cache
+        if len(idempotency_cache) > 1000:
+            sorted_items = sorted(idempotency_cache.items(), key=lambda x: x[1].get("timestamp", ""))
+            for key, _ in sorted_items[:100]:
+                del idempotency_cache[key]
 
 
 # CORS middleware
@@ -129,12 +211,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Monitoring middleware (doit être avant rate limiting pour mesurer tout)
+app.middleware("http")(monitoring_middleware)
+
+# Rate limiting middleware
+app.middleware("http")(rate_limit_middleware)
+
 
 # Middleware pour vérifier l'authentification RapidAPI
 @app.middleware("http")
 async def verify_rapidapi_auth(request: Request, call_next):
     # Skip auth pour les endpoints de documentation et health
-    if request.url.path in ["/docs", "/redoc", "/openapi.json", "/health", "/"]:
+    public_paths = ["/docs", "/redoc", "/openapi.json", "/health", "/"]
+    if request.url.path in public_paths or request.url.path.startswith("/v1/languages"):
         response = await call_next(request)
         return response
     
@@ -290,6 +379,20 @@ def perform_ocr(image_data: bytes, language: str = "fra", is_pdf: bool = False) 
         # Convertir en RGB si nécessaire
         if image.mode != 'RGB':
             image = image.convert('RGB')
+        
+        # Préprocessing d'image amélioré (si recommandé)
+        if should_preprocess(image):
+            try:
+                image = preprocess_image(
+                    image,
+                    enhance_contrast=True,
+                    denoise=True,
+                    deskew=True,
+                    upscale=False
+                )
+            except Exception as preprocess_error:
+                # Si le preprocessing échoue, continuer avec l'image originale
+                pass
         
         # Mapping des codes langue
         lang_map = {
@@ -995,11 +1098,14 @@ async def root():
 @app.get("/health")
 async def health_check():
     """Vérifie l'état de santé de l'API et les dépendances"""
+    # Informations sur le cache
+    cache_info = get_cache_info()
+    
     health_status = {
         "status": "healthy",
         "debug_mode": settings.debug_mode,
         "api_version": "2.0.0",
-        "cache_size": len(ocr_cache)
+        "cache": cache_info
     }
     
     # Vérifier si Tesseract est disponible
@@ -1024,14 +1130,18 @@ async def health_check():
     return health_status
 
 
+# Version originale (sans /v1/) - À déprécier progressivement
 @app.post("/ocr/upload", response_model=OCRResponse)
 async def upload_and_ocr(
     file: UploadFile = File(...),
     language: str = Form("fra"),
-    check_compliance: bool = Form(False)  # Nouveau paramètre pour vérifier la conformité FR
+    check_compliance: bool = Form(False),
+    request: Request = None
 ):
     """
     Upload une image de facture et extrait automatiquement les données structurées.
+    
+    **⚠️ DÉPRÉCIÉ : Utilisez /v1/ocr/upload à la place**
     
     **Paramètres:**
     - `file`: Fichier image (JPEG, PNG, PDF)
@@ -1110,6 +1220,144 @@ async def upload_and_ocr(
         )
 
 
+# Version v1 avec idempotence et codes d'erreur spécifiques
+@v1_router.post("/ocr/upload", response_model=OCRResponse)
+async def upload_and_ocr_v1(
+    request: Request,
+    file: UploadFile = File(...),
+    language: str = Form("fra"),
+    check_compliance: bool = Form(False)
+):
+    """
+    Upload une image de facture et extrait automatiquement les données structurées.
+    
+    **Version v1** : Support Idempotency-Key et codes d'erreur spécifiques
+    
+    **Headers optionnels:**
+    - `Idempotency-Key`: Clé unique pour éviter les doublons (UUID recommandé)
+    
+    **Paramètres:**
+    - `file`: Fichier image (JPEG, PNG, PDF)
+    - `language`: Code langue pour OCR (fra, eng, deu, spa, ita, por). Défaut: fra
+    - `check_compliance`: Activer validation conformité FR (bool). Défaut: false
+    
+    **Codes d'erreur:**
+    - 400 : Fichier invalide
+    - 409 : Doublon détecté (Idempotency-Key)
+    - 422 : Erreur de conformité
+    - 504 : Timeout OCR
+    """
+    # Vérifier l'idempotence
+    idempotent_result = check_idempotency(request)
+    if idempotent_result:
+        raise DuplicateError(
+            detail="Une requête identique a déjà été traitée avec cette Idempotency-Key",
+            existing_result=idempotent_result
+        )
+    
+    # Vérifier le type de fichier
+    if not file.content_type or not (file.content_type.startswith("image/") or file.content_type == "application/pdf"):
+        raise HTTPException(
+            status_code=400,
+            detail="Le fichier doit être une image (jpeg, png) ou un PDF"
+        )
+    
+    try:
+        # Lire le contenu du fichier
+        file_data = await file.read()
+        
+        # Vérifier le cache
+        file_hash = get_file_hash(file_data)
+        cached_result = get_cached_result(file_hash)
+        
+        if cached_result:
+            log_cache_hit("/v1/ocr/upload")
+            result = OCRResponse(
+                success=True,
+                data=cached_result.get("data"),
+                extracted_data=cached_result.get("extracted_data"),
+                confidence_scores=cached_result.get("confidence_scores"),
+                cached=True
+            )
+            # Stocker pour idempotence
+            store_idempotency(request, result.dict())
+            return result
+        
+        # Détecter si c'est un PDF
+        is_pdf = file.content_type == "application/pdf" or (file.filename and file.filename.lower().endswith('.pdf'))
+        
+        # Effectuer l'OCR avec timeout
+        try:
+            ocr_result = perform_ocr(file_data, language, is_pdf=is_pdf)
+        except Exception as ocr_error:
+            if "timeout" in str(ocr_error).lower() or "timed out" in str(ocr_error).lower():
+                raise TimeoutError("Le traitement OCR a dépassé le délai maximum (30 secondes)")
+            raise
+        
+        # Extraire les données structurées avec scores de confiance
+        extracted_data, confidence_scores = extract_invoice_data(ocr_result)
+        
+        # Validation compliance si demandée
+        compliance_data = None
+        if check_compliance:
+            try:
+                compliance_data = extract_compliance_data(
+                    extracted_data,
+                    ocr_result["text"],
+                    siren_api_key=settings.sirene_api_key,
+                    siren_api_secret=settings.sirene_api_secret,
+                    siren_client_id=settings.sirene_client_id,
+                    siren_client_certificate=settings.sirene_client_certificate
+                )
+                if not compliance_data.get("compliance_check", {}).get("compliant", True):
+                    # Erreur 422 pour non-conformité
+                    missing_fields = compliance_data.get("compliance_check", {}).get("missing_fields", [])
+                    raise ComplianceError(
+                        detail=f"Facture non conforme : {missing_fields}"
+                    )
+            except ComplianceError:
+                raise
+            except Exception as comp_error:
+                raise ComplianceError(detail=f"Erreur lors de la validation de conformité : {str(comp_error)}")
+        
+        # Préparer les données de réponse
+        response_data = {
+            "text": ocr_result["text"],
+            "language": ocr_result["language"]
+        }
+        if "pages_processed" in ocr_result:
+            response_data["pages_processed"] = ocr_result["pages_processed"]
+        
+        # Stocker dans le cache
+        cache_data = {
+            "data": response_data,
+            "extracted_data": extracted_data,
+            "confidence_scores": confidence_scores
+        }
+        if compliance_data:
+            cache_data["compliance"] = compliance_data
+        set_cached_result(file_hash, cache_data)
+        
+        result = OCRResponse(
+            success=True,
+            data=response_data,
+            extracted_data=extracted_data,
+            confidence_scores=confidence_scores,
+            cached=False,
+            compliance=compliance_data
+        )
+        
+        # Stocker pour idempotence
+        store_idempotency(request, result.dict())
+        
+        return result
+    
+    except (HTTPException, ComplianceError, DuplicateError, TimeoutError):
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors du traitement : {str(e)}")
+
+
 @app.post("/ocr/base64")
 async def ocr_from_base64(
     image_base64: str = Form(...),
@@ -1138,6 +1386,7 @@ async def ocr_from_base64(
         cached_result = get_cached_result(file_hash)
         
         if cached_result:
+            log_cache_hit("/ocr/base64")
             # Retourner le résultat depuis le cache
             return OCRResponse(
                 success=True,
@@ -1147,6 +1396,7 @@ async def ocr_from_base64(
                 cached=True
             )
         
+        log_cache_miss("/ocr/base64")
         # Effectuer l'OCR
         ocr_result = perform_ocr(file_data, language, is_pdf=is_pdf)
         
@@ -1433,7 +1683,14 @@ async def check_compliance_endpoint(
     - Enrichissement (si configuré)
     """
     try:
-        compliance_result = extract_compliance_data(invoice_data, invoice_data.get("text", ""))
+        compliance_result = extract_compliance_data(
+            invoice_data,
+            invoice_data.get("text", ""),
+            siren_api_key=settings.sirene_api_key,
+            siren_api_secret=settings.sirene_api_secret,
+            siren_client_id=settings.sirene_client_id,
+            siren_client_certificate=settings.sirene_client_certificate
+        )
         return {
             "success": True,
             "compliance": compliance_result
@@ -1487,7 +1744,10 @@ async def enrich_siret_endpoint(
     try:
         enrichment_result = enrich_siren_siret(
             siret,
-            siren_api_key=settings.sirene_api_key
+            siren_api_key=settings.sirene_api_key,
+            siren_api_secret=settings.sirene_api_secret,
+            siren_client_id=settings.sirene_client_id,
+            siren_client_certificate=settings.sirene_client_certificate
         )
         return {
             "success": True,
@@ -1629,6 +1889,252 @@ async def validate_facturx_endpoint(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# Ajouter les autres endpoints v1 essentiels
+@v1_router.post("/ocr/base64", response_model=OCRResponse)
+async def ocr_from_base64_v1(
+    request: Request,
+    image_base64: str = Form(...),
+    language: str = Form("fra")
+):
+    """Version v1 de /ocr/base64 avec idempotence"""
+    idempotent_result = check_idempotency(request)
+    if idempotent_result:
+        raise DuplicateError(
+            detail="Une requête identique a déjà été traitée avec cette Idempotency-Key",
+            existing_result=idempotent_result
+        )
+    
+    try:
+        is_pdf = False
+        if image_base64.startswith("data:image"):
+            image_base64 = image_base64.split(",")[1]
+        elif image_base64.startswith("data:application/pdf"):
+            is_pdf = True
+            image_base64 = image_base64.split(",")[1]
+        
+        file_data = base64.b64decode(image_base64)
+        file_hash = get_file_hash(file_data)
+        cached_result = get_cached_result(file_hash)
+        
+        if cached_result:
+            result = OCRResponse(
+                success=True,
+                data=cached_result.get("data"),
+                extracted_data=cached_result.get("extracted_data"),
+                confidence_scores=cached_result.get("confidence_scores"),
+                cached=True
+            )
+            store_idempotency(request, result.dict())
+            return result
+        
+        try:
+            ocr_result = perform_ocr(file_data, language, is_pdf=is_pdf)
+        except Exception as ocr_error:
+            if "timeout" in str(ocr_error).lower():
+                raise TimeoutError("Le traitement OCR a dépassé le délai maximum")
+            raise
+        
+        extracted_data, confidence_scores = extract_invoice_data(ocr_result)
+        response_data = {
+            "text": ocr_result["text"],
+            "language": ocr_result["language"]
+        }
+        if "pages_processed" in ocr_result:
+            response_data["pages_processed"] = ocr_result["pages_processed"]
+        
+        cache_data = {
+            "data": response_data,
+            "extracted_data": extracted_data,
+            "confidence_scores": confidence_scores
+        }
+        set_cached_result(file_hash, cache_data)
+        
+        result = OCRResponse(
+            success=True,
+            data=response_data,
+            extracted_data=extracted_data,
+            confidence_scores=confidence_scores,
+            cached=False
+        )
+        store_idempotency(request, result.dict())
+        return result
+    
+    except (HTTPException, DuplicateError, TimeoutError):
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@v1_router.post("/ocr/batch", response_model=BatchOCRResponse)
+async def batch_ocr_v1(request: Request, batch_request: BatchOCRRequest):
+    """Version v1 de /ocr/batch avec idempotence"""
+    idempotent_result = check_idempotency(request)
+    if idempotent_result:
+        raise DuplicateError(
+            detail="Une requête identique a déjà été traitée avec cette Idempotency-Key",
+            existing_result=idempotent_result
+        )
+    
+    if len(batch_request.files) > 10:
+        raise HTTPException(status_code=400, detail="Maximum 10 fichiers par requête batch")
+    
+    results = []
+    total_cached = 0
+    
+    for file_base64 in batch_request.files:
+        try:
+            is_pdf = False
+            if file_base64.startswith("data:image"):
+                file_base64 = file_base64.split(",")[1]
+            elif file_base64.startswith("data:application/pdf"):
+                is_pdf = True
+                file_base64 = file_base64.split(",")[1]
+            
+            file_data = base64.b64decode(file_base64)
+            file_hash = get_file_hash(file_data)
+            cached_result = get_cached_result(file_hash)
+            
+            if cached_result:
+                results.append(OCRResponse(
+                    success=True,
+                    data=cached_result.get("data"),
+                    extracted_data=cached_result.get("extracted_data"),
+                    confidence_scores=cached_result.get("confidence_scores"),
+                    cached=True
+                ))
+                total_cached += 1
+            else:
+                try:
+                    ocr_result = perform_ocr(file_data, batch_request.language, is_pdf=is_pdf)
+                except Exception as ocr_error:
+                    if "timeout" in str(ocr_error).lower():
+                        raise TimeoutError("Le traitement OCR a dépassé le délai maximum")
+                    raise
+                
+                extracted_data, confidence_scores = extract_invoice_data(ocr_result)
+                response_data = {
+                    "text": ocr_result["text"],
+                    "language": ocr_result["language"]
+                }
+                if "pages_processed" in ocr_result:
+                    response_data["pages_processed"] = ocr_result["pages_processed"]
+                
+                cache_data = {
+                    "data": response_data,
+                    "extracted_data": extracted_data,
+                    "confidence_scores": confidence_scores
+                }
+                set_cached_result(file_hash, cache_data)
+                
+                results.append(OCRResponse(
+                    success=True,
+                    data=response_data,
+                    extracted_data=extracted_data,
+                    confidence_scores=confidence_scores,
+                    cached=False
+                ))
+        except Exception as e:
+            results.append(OCRResponse(success=False, error=str(e)))
+    
+    result = BatchOCRResponse(
+        success=True,
+        results=results,
+        total_processed=len(batch_request.files),
+        total_cached=total_cached
+    )
+    store_idempotency(request, result.dict())
+    return result
+
+
+@v1_router.post("/compliance/check")
+async def compliance_check_v1(request: Request, invoice_data: dict = Body(...)):
+    """Version v1 de /compliance/check avec codes d'erreur spécifiques"""
+    try:
+        compliance_result = extract_compliance_data(
+            invoice_data,
+            invoice_data.get("text", ""),
+            siren_api_key=settings.sirene_api_key,
+            siren_api_secret=settings.sirene_api_secret,
+            siren_client_id=settings.sirene_client_id,
+            siren_client_certificate=settings.sirene_client_certificate
+        )
+        if not compliance_result.get("compliance_check", {}).get("compliant", True):
+            missing_fields = compliance_result.get("compliance_check", {}).get("missing_fields", [])
+            raise ComplianceError(
+                detail=f"Facture non conforme : {missing_fields}"
+            )
+        return {"success": True, "compliance": compliance_result}
+    except ComplianceError:
+        raise
+    except Exception as e:
+        raise ComplianceError(detail=f"Erreur lors de la validation : {str(e)}")
+
+
+@v1_router.get("/languages")
+async def get_languages_v1():
+    """Version v1 de /languages"""
+    return {
+        "languages": [
+            {"code": "fra", "name": "Français"},
+            {"code": "eng", "name": "English"},
+            {"code": "deu", "name": "Deutsch"},
+            {"code": "spa", "name": "Español"},
+            {"code": "ita", "name": "Italiano"},
+            {"code": "por", "name": "Português"}
+        ]
+    }
+
+
+@v1_router.get("/quota")
+async def get_quota_v1(request: Request):
+    """
+    Retourne les informations sur le quota restant pour l'utilisateur
+    
+    Headers retournés:
+    - X-RateLimit-Limit: Limite totale
+    - X-RateLimit-Remaining: Requêtes restantes
+    - X-RateLimit-Reset: Timestamp de réinitialisation
+    - X-RateLimit-Plan: Plan actuel
+    """
+    from rate_limiting import get_plan_from_request, check_rate_limit
+    
+    plan = get_plan_from_request(request)
+    allowed, rate_limit_info = check_rate_limit(request, limit_type="monthly")
+    daily_allowed, daily_info = check_rate_limit(request, limit_type="daily")
+    
+    return {
+        "plan": plan,
+        "monthly": {
+            "limit": rate_limit_info["limit"],
+            "remaining": rate_limit_info["remaining"],
+            "reset_time": rate_limit_info["reset_time"]
+        },
+        "daily": {
+            "limit": daily_info["limit"],
+            "remaining": daily_info["remaining"],
+            "reset_time": daily_info["reset_time"]
+        }
+    }
+
+
+@v1_router.get("/metrics")
+async def get_metrics_v1(request: Request):
+    """
+    Retourne les métriques de performance de l'API
+    
+    Note: Endpoint pour monitoring interne, peut nécessiter authentification admin
+    """
+    metrics_data = get_metrics()
+    return {
+        "status": "ok",
+        "metrics": metrics_data,
+        "timestamp": datetime.now().isoformat()
+    }
+
+
+# Inclure le router v1 dans l'application
+app.include_router(v1_router)
 
 if __name__ == "__main__":
     import uvicorn

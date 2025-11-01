@@ -96,7 +96,7 @@
 - **État actuel** : Aucune détection ni enrichissement
 - **Ce qu'il faut** :
   - Détecter les numéros SIREN/SIRET dans le texte OCR
-  - Appeler l'API Sirene (api.insee.fr) pour enrichir
+  - Appeler l'API Sirene (https://portail-api.insee.fr/) pour enrichir
   - Retourner : raison sociale, adresse, forme juridique, date création, etc.
 
 #### D. **Enrichissement VIES (TVA intracom)** ❌
@@ -317,7 +317,7 @@ POST /enrich/siren
 ```
 
 **Technologies nécessaires** :
-- `requests` pour appeler l'API Sirene (api.insee.fr)
+- `requests` pour appeler l'API Sirene (https://portail-api.insee.fr/)
 - Clé API Insee (gratuite mais nécessite inscription)
 
 #### Enrichissement VIES

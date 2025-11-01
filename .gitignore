@@ -9,4 +9,18 @@ venv/
 .venv
 *.log
 .DS_Store
+# Certificats API Sirene (sécurité)
+*.pem
+*.crt
+*.key
+certs/
+certificates/
+# Fichiers avec des identifiants sensibles (à ne pas commiter)
+*_IDENTIFIANTS*.md
+*_EXEMPLE*.md
+*_EXEMPLE*.txt
+QUICK_START_SIRENE.md
+CONFIGURATION_EXEMPLE.md
+MES_IDENTIFIANTS_SIRENE.md
+MON_ENV_EXEMPLE.txt
 

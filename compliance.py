@@ -4,10 +4,13 @@ Vérifie les mentions légales obligatoires, TVA, et enrichit avec SIREN/SIRET e
 """
 
 import re
+import os
+import json
 from typing import Dict, List, Optional, Tuple
-from datetime import datetime
+from datetime import datetime, timedelta
 import requests
 from fastapi import HTTPException
+import tempfile
 
 
 # Taux de TVA valides en France
@@ -226,43 +229,386 @@ def validate_french_vat(extracted_data: Dict) -> Dict:
     }
 
 
-def enrich_siren_siret(siret: str, siren_api_key: Optional[str] = None) -> Dict:
+# Cache pour les tokens OAuth2 (évite de demander un nouveau token à chaque requête)
+_token_cache: Dict[str, Dict] = {}
+
+
+def _get_oauth2_token_client_credentials(
+    client_id: str,
+    client_certificate: str,
+    token_url: str = "https://portail-api.insee.fr/token"
+) -> Optional[str]:
+    """
+    Obtient un token OAuth2 avec Client Credentials flow et certificat client (mTLS)
+    
+    Args:
+        client_id: Client ID
+        client_certificate: Chemin vers le certificat PEM ou contenu du certificat
+        token_url: URL du endpoint de token
+    
+    Returns:
+        Token d'accès ou None en cas d'erreur
+    """
+    # Vérifier le cache de token
+    cache_key = f"oauth2_token_{client_id}"
+    if cache_key in _token_cache:
+        cached_token = _token_cache[cache_key]
+        expires_at = cached_token.get("expires_at")
+        if expires_at and datetime.now() < expires_at:
+            return cached_token.get("access_token")
+    
+    try:
+        # Gérer le certificat (chemin fichier ou contenu)
+        cert_path = None
+        if os.path.exists(client_certificate):
+            # C'est un chemin de fichier
+            cert_path = client_certificate
+        else:
+            # C'est probablement le contenu du certificat
+            # Créer un fichier temporaire
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.pem', delete=False) as tmp_file:
+                tmp_file.write(client_certificate)
+                cert_path = tmp_file.name
+        
+        # Requête pour obtenir le token
+        response = requests.post(
+            token_url,
+            data={"grant_type": "client_credentials"},
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            cert=cert_path,  # Certificat client pour mTLS
+            auth=(client_id, ""),  # Client ID comme username
+            timeout=10
+        )
+        
+        # Nettoyer le fichier temporaire si créé
+        if not os.path.exists(client_certificate) and cert_path:
+            try:
+                os.unlink(cert_path)
+            except:
+                pass
+        
+        if response.status_code == 200:
+            token_data = response.json()
+            access_token = token_data.get("access_token")
+            expires_in = token_data.get("expires_in", 3600)  # Par défaut 1 heure
+            
+            # Mettre en cache le token
+            _token_cache[cache_key] = {
+                "access_token": access_token,
+                "expires_at": datetime.now() + timedelta(seconds=expires_in - 60)  # Expire 1 min avant
+            }
+            
+            return access_token
+        else:
+            return None
+    
+    except Exception as e:
+        return None
+
+
+def _get_oauth2_token_consumer_key(
+    consumer_key: str,
+    consumer_secret: str,
+    token_url: str = "https://portail-api.insee.fr/token"
+) -> Optional[str]:
+    """
+    Obtient un token OAuth2 avec Consumer Key/Secret (ancien système)
+    
+    Args:
+        consumer_key: Consumer Key
+        consumer_secret: Consumer Secret
+        token_url: URL du endpoint de token
+    
+    Returns:
+        Token d'accès ou None en cas d'erreur
+    """
+    # Vérifier le cache de token
+    cache_key = f"oauth2_token_{consumer_key}"
+    if cache_key in _token_cache:
+        cached_token = _token_cache[cache_key]
+        expires_at = cached_token.get("expires_at")
+        if expires_at and datetime.now() < expires_at:
+            return cached_token.get("access_token")
+    
+    try:
+        # Requête pour obtenir le token avec Basic Auth
+        response = requests.post(
+            token_url,
+            data={"grant_type": "client_credentials"},
+            headers={"Content-Type": "application/x-www-form-urlencoded"},
+            auth=(consumer_key, consumer_secret),
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            token_data = response.json()
+            access_token = token_data.get("access_token")
+            expires_in = token_data.get("expires_in", 3600)
+            
+            # Mettre en cache le token
+            _token_cache[cache_key] = {
+                "access_token": access_token,
+                "expires_at": datetime.now() + timedelta(seconds=expires_in - 60)
+            }
+            
+            return access_token
+        else:
+            return None
+    
+    except Exception as e:
+        return None
+
+
+def _call_sirene_api(siret: str, access_token: str) -> Optional[Dict]:
+    """
+    Appelle l'API Sirene v3 pour obtenir les données d'un SIRET
+    
+    Args:
+        siret: Numéro SIRET (14 chiffres)
+        access_token: Token OAuth2
+    
+    Returns:
+        Données de l'entreprise ou None en cas d'erreur
+    """
+    try:
+        api_url = f"https://api.insee.fr/entreprises/sirene/v3/siret/{siret}"
+        
+        response = requests.get(
+            api_url,
+            headers={
+                "Authorization": f"Bearer {access_token}",
+                "Accept": "application/json"
+            },
+            timeout=10
+        )
+        
+        if response.status_code == 200:
+            return response.json()
+        elif response.status_code == 404:
+            return None  # SIRET non trouvé
+        else:
+            return None
+    
+    except Exception as e:
+        return None
+
+
+def _parse_sirene_response(sirene_data: Dict) -> Dict:
+    """
+    Parse la réponse de l'API Sirene et extrait les données pertinentes
+    
+    Args:
+        sirene_data: Réponse JSON de l'API Sirene
+    
+    Returns:
+        Dictionnaire avec les données structurées
+    """
+    try:
+        # Structure de la réponse API Sirene v3
+        etablissement = sirene_data.get("etablissement", {})
+        periodes_etablissement = etablissement.get("periodesEtablissement", [])
+        
+        if not periodes_etablissement:
+            return {}
+        
+        # Prendre la période la plus récente
+        periode = periodes_etablissement[0]
+        
+        # Unite legale (si disponible)
+        unite_legale = etablissement.get("uniteLegale", {})
+        periodes_unite_legale = unite_legale.get("periodesUniteLegale", [])
+        periode_unite = periodes_unite_legale[0] if periodes_unite_legale else {}
+        
+        # Adresse
+        adresse = periode.get("adresseEtablissement", {})
+        
+        # Activité
+        activite = periode.get("activitePrincipaleEtablissement", "")
+        
+        # Forme juridique
+        forme_juridique = periode_unite.get("categorieJuridiqueUniteLegale", "")
+        
+        # Raison sociale
+        denomination = periode_unite.get("denominationUniteLegale", "")
+        nom = periode_unite.get("nomUniteLegale", "")
+        prenom = periode_unite.get("prenom1UniteLegale", "")
+        
+        raison_sociale = denomination
+        if not raison_sociale:
+            if nom and prenom:
+                raison_sociale = f"{prenom} {nom}"
+            elif nom:
+                raison_sociale = nom
+        
+        # Effectifs
+        tranche_effectifs = periode.get("trancheEffectifsEtablissement", "")
+        
+        # Statut
+        etat_administratif = periode.get("etatAdministratifEtablissement", "")
+        statut = "Actif" if etat_administratif == "A" else "Inactif"
+        
+        # Date de création
+        date_creation = periode.get("dateCreationEtablissement", "")
+        
+        # Date de cessation (si inactif)
+        date_cessation = periode.get("dateDebut", "") if etat_administratif != "A" else None
+        
+        # Construire l'adresse complète
+        adresse_complete = ""
+        if adresse:
+            adresse_parts = []
+            if adresse.get("numeroVoieEtablissement"):
+                adresse_parts.append(adresse.get("numeroVoieEtablissement"))
+            if adresse.get("typeVoieEtablissement"):
+                adresse_parts.append(adresse.get("typeVoieEtablissement"))
+            if adresse.get("libelleVoieEtablissement"):
+                adresse_parts.append(adresse.get("libelleVoieEtablissement"))
+            if adresse_parts:
+                adresse_complete = " ".join(adresse_parts)
+            if adresse.get("codePostalEtablissement"):
+                adresse_complete += f", {adresse.get('codePostalEtablissement')}"
+            if adresse.get("libelleCommuneEtablissement"):
+                adresse_complete += f" {adresse.get('libelleCommuneEtablissement')}"
+        
+        return {
+            "siret": etablissement.get("siret", ""),
+            "siren": etablissement.get("siren", ""),
+            "raison_sociale": raison_sociale,
+            "adresse_complete": adresse_complete,
+            "code_postal": adresse.get("codePostalEtablissement", "") if adresse else "",
+            "ville": adresse.get("libelleCommuneEtablissement", "") if adresse else "",
+            "activite_principale": activite,
+            "forme_juridique": forme_juridique,
+            "statut": statut,
+            "date_creation": date_creation,
+            "date_cessation": date_cessation,
+            "tranche_effectifs": tranche_effectifs,
+            "source": "API Sirene (Insee)"
+        }
+    
+    except Exception as e:
+        return {}
+
+
+def enrich_siren_siret(
+    siret: str, 
+    siren_api_key: Optional[str] = None,
+    siren_api_secret: Optional[str] = None,
+    siren_client_id: Optional[str] = None,
+    siren_client_certificate: Optional[str] = None
+) -> Dict:
     """
     Enrichit les données avec l'API Sirene (Insee)
     
-    Nécessite une clé API Insee (gratuite sur api.insee.fr)
+    Nécessite une clé API Insee (gratuite sur https://portail-api.insee.fr/)
+    
+    Deux méthodes d'authentification possibles :
+    1. OAuth2 avec Client ID + Client Certificate (PEM) - Recommandé
+    2. Consumer Key/Secret - Ancien système
+    
+    Args:
+        siret: Numéro SIRET (14 chiffres)
+        siren_api_key: Consumer Key (ancien système)
+        siren_api_secret: Consumer Secret (ancien système)
+        siren_client_id: Client ID pour OAuth2 (recommandé)
+        siren_client_certificate: Chemin vers le certificat PEM ou contenu du certificat pour OAuth2
+    
+    Returns:
+        Dictionnaire avec les données enrichies ou erreur
     """
-    if not siret or len(siret) != 14:
+    if not siret or len(siret) != 14 or not siret.isdigit():
         return {
             "success": False,
-            "error": "SIRET invalide"
+            "error": "SIRET invalide (doit contenir 14 chiffres)",
+            "siret": siret,
+            "siren": siret[:9] if siret and len(siret) >= 9 else None
         }
     
-    # Si pas de clé API, retourner juste une détection
-    if not siren_api_key:
+    # Vérifier qu'au moins une méthode d'authentification est configurée
+    has_oauth2 = siren_client_id and siren_client_certificate
+    has_consumer = siren_api_key and siren_api_secret
+    
+    if not has_oauth2 and not has_consumer:
         return {
             "success": False,
-            "error": "Clé API Sirene non configurée",
+            "error": "Clé API Sirene non configurée. Configurez soit SIRENE_CLIENT_ID + SIRENE_CLIENT_CERTIFICATE (OAuth2), soit SIRENE_API_KEY + SIRENE_API_SECRET (Consumer Key/Secret)",
             "siret": siret,
-            "siren": siret[:9]
+            "siren": siret[:9],
+            "config_url": "https://portail-api.insee.fr/"
         }
     
     try:
-        # API Sirene v3 (nécessite authentification OAuth2)
-        # Pour simplifier, on retourne une structure prête pour l'intégration
-        # L'implémentation complète nécessite OAuth2 avec Insee
+        # Obtenir le token OAuth2
+        access_token = None
+        
+        if has_oauth2:
+            access_token = _get_oauth2_token_client_credentials(
+                siren_client_id,
+                siren_client_certificate
+            )
+            auth_method = "OAuth2 (Client ID + Certificate)"
+        elif has_consumer:
+            access_token = _get_oauth2_token_consumer_key(
+                siren_api_key,
+                siren_api_secret
+            )
+            auth_method = "OAuth2 (Consumer Key/Secret)"
+        
+        if not access_token:
+            return {
+                "success": False,
+                "error": "Impossible d'obtenir le token OAuth2. Vérifiez vos identifiants API Sirene.",
+                "siret": siret,
+                "siren": siret[:9],
+                "auth_method": auth_method
+            }
+        
+        # Appeler l'API Sirene
+        sirene_data = _call_sirene_api(siret, access_token)
+        
+        if not sirene_data:
+            return {
+                "success": False,
+                "error": "SIRET non trouvé dans la base Sirene ou erreur API",
+                "siret": siret,
+                "siren": siret[:9]
+            }
+        
+        # Parser la réponse
+        parsed_data = _parse_sirene_response(sirene_data)
+        
+        if not parsed_data:
+            return {
+                "success": False,
+                "error": "Erreur lors du parsing de la réponse API Sirene",
+                "siret": siret,
+                "siren": siret[:9]
+            }
         
         return {
             "success": True,
-            "siret": siret,
-            "siren": siret[:9],
-            "note": "Intégration API Sirene nécessite OAuth2. Structure prête pour implémentation."
+            "siret": parsed_data.get("siret", siret),
+            "siren": parsed_data.get("siren", siret[:9]),
+            "raison_sociale": parsed_data.get("raison_sociale"),
+            "adresse_complete": parsed_data.get("adresse_complete"),
+            "code_postal": parsed_data.get("code_postal"),
+            "ville": parsed_data.get("ville"),
+            "activite_principale": parsed_data.get("activite_principale"),
+            "forme_juridique": parsed_data.get("forme_juridique"),
+            "statut": parsed_data.get("statut"),
+            "date_creation": parsed_data.get("date_creation"),
+            "date_cessation": parsed_data.get("date_cessation"),
+            "tranche_effectifs": parsed_data.get("tranche_effectifs"),
+            "source": parsed_data.get("source", "API Sirene (Insee)"),
+            "auth_method": auth_method
         }
+    
     except Exception as e:
         return {
             "success": False,
-            "error": str(e),
-            "siret": siret
+            "error": f"Erreur lors de l'enrichissement Sirene : {str(e)}",
+            "siret": siret,
+            "siren": siret[:9]
         }
 
 
@@ -354,7 +700,14 @@ def validate_vies(vat_number: str) -> Dict:
         }
 
 
-def extract_compliance_data(extracted_data: Dict, ocr_text: str) -> Dict:
+def extract_compliance_data(
+    extracted_data: Dict, 
+    ocr_text: str,
+    siren_api_key: Optional[str] = None,
+    siren_api_secret: Optional[str] = None,
+    siren_client_id: Optional[str] = None,
+    siren_client_certificate: Optional[str] = None
+) -> Dict:
     """
     Extrait et vérifie toutes les données de conformité pour une facture française
     
@@ -364,6 +717,14 @@ def extract_compliance_data(extracted_data: Dict, ocr_text: str) -> Dict:
     - Vérification compliance FR
     - Validation TVA
     - Enrichissement (si configuré)
+    
+    Args:
+        extracted_data: Données extraites de la facture
+        ocr_text: Texte OCR complet
+        siren_api_key: Consumer Key pour API Sirene (optionnel)
+        siren_api_secret: Consumer Secret pour API Sirene (optionnel)
+        siren_client_id: Client ID pour API Sirene OAuth2 (optionnel)
+        siren_client_certificate: Certificat PEM pour API Sirene OAuth2 (optionnel)
     """
     compliance_result = {
         "compliance_check": {},
@@ -394,8 +755,14 @@ def extract_compliance_data(extracted_data: Dict, ocr_text: str) -> Dict:
     
     # 5. Enrichissement (si SIRET trouvé)
     if siren_siret.get("siret"):
-        # Note: nécessite clé API configurée
-        enrichment = enrich_siren_siret(siren_siret["siret"])
+        # Passer les identifiants API Sirene si disponibles
+        enrichment = enrich_siren_siret(
+            siren_siret["siret"],
+            siren_api_key=siren_api_key,
+            siren_api_secret=siren_api_secret,
+            siren_client_id=siren_client_id,
+            siren_client_certificate=siren_client_certificate
+        )
         compliance_result["enrichment"]["siren_siret"] = enrichment
     
     # 6. Validation VIES (si TVA intracom trouvé)
