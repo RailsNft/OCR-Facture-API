@@ -198,6 +198,8 @@ def parse_facturx_from_pdf(pdf_data: bytes) -> Tuple[Optional[str], Optional[Dic
             metadata = pdf_document.metadata
             if metadata:
                 # Le XML peut être référencé dans les metadata
+                # TODO: Implémenter extraction depuis metadata si nécessaire
+                pass
         
         # Méthode 2: Chercher directement dans le contenu du PDF (structure interne)
         # Les PDF/A-3 avec Factur-X ont généralement le XML dans un fichier attaché
