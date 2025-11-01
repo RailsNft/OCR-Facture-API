@@ -921,7 +921,8 @@ def extract_invoice_data(ocr_result: dict) -> tuple[dict, dict]:
     
     # Calcul de la TVA si HT et TTC disponibles
     if extracted["total_ht"] and extracted["total_ttc"]:
-        extracted["tva"] = extracted["total_ttc"] - extracted["total_ht"]
+        # Arrondir la TVA à 2 décimales pour éviter les erreurs de précision flottante
+        extracted["tva"] = round(extracted["total_ttc"] - extracted["total_ht"], 2)
         # Score de confiance pour TVA = moyenne des scores HT et TTC
         confidence_scores["tva"] = round((confidence_scores["total_ht"] + confidence_scores["total_ttc"]) / 2, 2)
     
