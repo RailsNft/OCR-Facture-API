@@ -227,9 +227,11 @@ app.middleware("http")(rate_limit_middleware)
 # Middleware pour vérifier l'authentification RapidAPI
 @app.middleware("http")
 async def verify_rapidapi_auth(request: Request, call_next):
-    # Skip auth pour les endpoints de documentation et health
+    # Skip auth pour les endpoints de documentation, health et demo
     public_paths = ["/docs", "/redoc", "/openapi.json", "/health", "/"]
-    if request.url.path in public_paths or request.url.path.startswith("/v1/languages"):
+    if (request.url.path in public_paths 
+        or request.url.path.startswith("/demo")
+        or request.url.path.startswith("/v1/languages")):
         response = await call_next(request)
         return response
     
