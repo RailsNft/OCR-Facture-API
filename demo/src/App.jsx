@@ -50,37 +50,46 @@ function App() {
       formData.append('language', language)
       formData.append('check_compliance', checkCompliance.toString())
 
-      const headers = {}
-      // Utiliser la clé API saisie par l'utilisateur, sinon celle de l'environnement
+      // Préparer les headers avec la clé API
       const secretToUse = apiKey || API_SECRET
-      if (secretToUse) {
-        headers['X-RapidAPI-Proxy-Secret'] = secretToUse
-      } else {
+      if (!secretToUse) {
         setError('Veuillez entrer votre clé API RapidAPI')
         setLoading(false)
         return
       }
       
       // Sauvegarder dans localStorage
-      localStorage.setItem('ocr_facture_api_key', apiKey)
+      if (apiKey) {
+        localStorage.setItem('ocr_facture_api_key', apiKey)
+      }
+
+      // Configurer les headers explicitement
+      const config = {
+        headers: {
+          'X-RapidAPI-Proxy-Secret': secretToUse
+        }
+      }
+
+      console.log('Envoi de la requête vers:', `${API_BASE_URL}/v1/ocr/upload`)
+      console.log('Header X-RapidAPI-Proxy-Secret:', secretToUse ? 'Présent' : 'Manquant')
+      console.log('Valeur du secret:', secretToUse.substring(0, 10) + '...')
 
       const response = await axios.post(
         `${API_BASE_URL}/v1/ocr/upload`,
         formData,
-        {
-          headers: {
-            ...headers,
-            'Content-Type': 'multipart/form-data'
-          }
-        }
+        config
       )
 
       setResults(response.data)
     } catch (err) {
       console.error('Erreur:', err)
+      console.error('Response:', err.response?.data)
+      console.error('Status:', err.response?.status)
+      console.error('Headers envoyés:', err.config?.headers)
       setError(
         err.response?.data?.detail || 
         err.response?.data?.error || 
+        err.response?.data?.message ||
         err.message || 
         'Une erreur est survenue lors du traitement'
       )
