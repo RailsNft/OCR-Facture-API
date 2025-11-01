@@ -243,10 +243,26 @@ async def verify_rapidapi_auth(request: Request, call_next):
     
     # Vérifier la clé secrète RapidAPI
     rapidapi_secret = request.headers.get("X-RapidAPI-Proxy-Secret")
+    
+    # Debug: logger les headers reçus (seulement en mode debug)
+    if settings.debug_mode:
+        import logging
+        logging.info(f"Headers reçus: {dict(request.headers)}")
+        logging.info(f"X-RapidAPI-Proxy-Secret reçu: {rapidapi_secret}")
+        logging.info(f"X-RapidAPI-Proxy-Secret attendu: {settings.rapidapi_proxy_secret[:10]}...")
+    
     if not rapidapi_secret or rapidapi_secret != settings.rapidapi_proxy_secret:
         return JSONResponse(
             status_code=401,
-            content={"error": "Unauthorized", "message": "Invalid or missing X-RapidAPI-Proxy-Secret header"}
+            content={
+                "error": "Unauthorized", 
+                "message": "Invalid or missing X-RapidAPI-Proxy-Secret header",
+                "debug": {
+                    "header_received": rapidapi_secret is not None,
+                    "header_length": len(rapidapi_secret) if rapidapi_secret else 0,
+                    "expected_length": len(settings.rapidapi_proxy_secret) if settings.rapidapi_proxy_secret else 0
+                } if settings.debug_mode else None
+            }
         )
     
     response = await call_next(request)

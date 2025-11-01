@@ -73,12 +73,17 @@ function App() {
       console.log('Header config:', headersConfig)
       console.log('Secret length:', secretToUse.length)
       console.log('Secret preview:', secretToUse.substring(0, 15) + '...')
+      console.log('Full secret (first 20):', secretToUse.substring(0, 20))
 
+      // Créer la config axios - méthode simple et directe
       const response = await axios.post(
         `${API_BASE_URL}/v1/ocr/upload`,
         formData,
         {
-          headers: headersConfig
+          headers: {
+            'X-RapidAPI-Proxy-Secret': secretToUse.trim()
+            // Ne pas définir Content-Type - axios le gère automatiquement pour FormData
+          }
         }
       )
 
@@ -89,8 +94,18 @@ function App() {
       console.error('Status:', err.response?.status)
       console.error('Response data:', err.response?.data)
       console.error('Request URL:', err.config?.url)
-      console.error('Request headers:', err.config?.headers)
+      console.error('Request headers:', JSON.stringify(err.config?.headers, null, 2))
+      console.error('Request headers object:', err.config?.headers)
       console.error('Full error:', err)
+      
+      // Vérifier si le header est présent dans la requête
+      if (err.config?.headers) {
+        const hasHeader = 'X-RapidAPI-Proxy-Secret' in err.config.headers
+        console.error('Header X-RapidAPI-Proxy-Secret présent ?', hasHeader)
+        if (hasHeader) {
+          console.error('Valeur du header:', err.config.headers['X-RapidAPI-Proxy-Secret']?.substring(0, 20) + '...')
+        }
+      }
       setError(
         err.response?.data?.detail || 
         err.response?.data?.error || 
