@@ -1,0 +1,9 @@
+node_modules/
+# dist/ - Ne pas ignorer, nécessaire pour le déploiement
+.env.local
+.env.*.local
+*.log
+.DS_Store
+coverage/
+.nyc_output/
+

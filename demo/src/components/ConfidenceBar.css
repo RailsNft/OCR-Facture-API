@@ -1,0 +1,61 @@
+.confidence-item {
+  margin-bottom: 1rem;
+}
+
+.confidence-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.confidence-field {
+  color: #666;
+  text-transform: capitalize;
+}
+
+.confidence-percentage {
+  font-weight: 600;
+  color: #333;
+}
+
+.confidence-bar-wrapper {
+  height: 8px;
+  background: #e5e7eb;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: 0.25rem;
+}
+
+.confidence-bar {
+  height: 100%;
+  transition: width 0.3s ease;
+  border-radius: 4px;
+}
+
+.confidence-label {
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.confidence-bar-compact {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.confidence-bar-fill {
+  flex: 1;
+  height: 4px;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.confidence-text {
+  font-size: 0.75rem;
+  color: #666;
+  min-width: 35px;
+  text-align: right;
+}
+

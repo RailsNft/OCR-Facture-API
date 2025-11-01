@@ -1,6 +1,7 @@
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Request, Body, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 import base64
 from typing import Optional, List, Dict, Any
 from config import settings
@@ -2142,6 +2143,11 @@ async def get_metrics_v1(request: Request):
 
 # Inclure le router v1 dans l'application
 app.include_router(v1_router)
+
+# Servir l'interface de démo React (si le dossier dist existe)
+demo_dist_path = os.path.join(os.path.dirname(__file__), "demo", "dist")
+if os.path.exists(demo_dist_path):
+    app.mount("/demo", StaticFiles(directory=demo_dist_path, html=True), name="demo")
 
 if __name__ == "__main__":
     import uvicorn
