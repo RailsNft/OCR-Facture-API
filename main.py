@@ -41,8 +41,8 @@ for path in tesseract_paths:
 
 app = FastAPI(
     title="OCR Facture API",
-    description="API professionnelle pour l'extraction automatique de données de factures via OCR. Extrait le texte, les montants, dates, numéros de facture, lignes de facture (items) et autres informations structurées. Inclut des scores de confiance pour chaque donnée extraite.",
-    version="1.1.0",
+    description="API professionnelle pour l'extraction automatique de données de factures via OCR. Extrait le texte, les montants, dates, numéros de facture, lignes de facture (items) et autres informations structurées. Inclut des scores de confiance pour chaque donnée extraite. Support Factur-X (EN16931) et compliance française.",
+    version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
@@ -969,7 +969,7 @@ def extract_invoice_data(ocr_result: dict) -> tuple[dict, dict]:
 async def root():
     return {
         "message": "OCR Facture API",
-        "version": "1.2.0",
+        "version": "2.0.0",
         "status": "running",
         "features": [
             "OCR extraction",
@@ -981,7 +981,13 @@ async def root():
             "Banking info extraction (IBAN, SWIFT, RIB)",
             "Batch processing",
             "Result caching",
-            "Webhook integrations (Zapier, Make, Salesforce)"
+            "Webhook integrations (Zapier, Make, Salesforce)",
+            "🆕 French compliance check (mentions légales, TVA validation)",
+            "🆕 SIREN/SIRET detection and enrichment",
+            "🆕 VIES validation (TVA intracom)",
+            "🆕 Factur-X XML generation (EN16931)",
+            "🆕 Factur-X parser (extract from PDF/A-3)",
+            "🆕 Factur-X validator (XSD + business rules)"
         ]
     }
 
@@ -992,7 +998,7 @@ async def health_check():
     health_status = {
         "status": "healthy",
         "debug_mode": settings.debug_mode,
-        "api_version": "1.2.0",
+        "api_version": "2.0.0",
         "cache_size": len(ocr_cache)
     }
     
