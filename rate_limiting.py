@@ -26,8 +26,8 @@ _redis_client: Optional[redis.Redis] = None
 # Limites par plan (requêtes par mois)
 PLAN_LIMITS = {
     "BASIC": {
-        "monthly": 100,
-        "daily": None,  # Calculé automatiquement (100/30 = ~3-4/jour)
+        "monthly": 400,
+        "daily": None,  # Calculé automatiquement (400/30 = ~13-14/jour)
         "per_minute": 1,
     },
     "PRO": {

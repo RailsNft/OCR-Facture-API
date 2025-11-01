@@ -4,9 +4,9 @@
 
 ### Plan BASIC (Gratuit)
 - **Prix** : $0 / mois
-- **Quota** : 100 requêtes / mois
-- **Limite quotidienne** : ~3-4 requêtes / jour (moyenne)
-- **Factures max** : 100 factures / mois (batch désactivé)
+- **Quota** : 400 requêtes / mois
+- **Limite quotidienne** : ~13-14 requêtes / jour (moyenne)
+- **Factures max** : 400 factures / mois (batch désactivé)
 - **Fonctionnalités** : OCR basique uniquement (pas de compliance FR, pas de Factur-X)
 - **Idéal pour** : Tests, développement, évaluation de l'API
 - **Support** : Documentation uniquement
@@ -69,7 +69,7 @@
 
 | Plan | Limite requêtes/jour | Factures max/jour | Description |
 |------|---------------------|-------------------|-------------|
-| **BASIC** | ~3-4 req/jour | ~3-4 factures/jour | Batch désactivé (1 facture = 1 requête) |
+| **BASIC** | ~13-14 req/jour | ~13-14 factures/jour | Batch désactivé (1 facture = 1 requête) |
 | **PRO** | ~666 req/jour | ~6 666 factures/jour | Batch activé (10 factures/requête) |
 | **ULTRA** | ~2 666 req/jour | ~26 666 factures/jour | Batch activé (10 factures/requête) |
 | **MEGA** | ~8 333 req/jour | ~83 333 factures/jour | Batch activé (10 factures/requête) |
@@ -84,7 +84,7 @@
 
 | Plan | Coût mensuel | Requêtes / mois | Factures max/mois | Coût par requête | Coût par facture |
 |------|--------------|-----------------|-------------------|------------------|-----------------|
-| **BASIC** | $0 | 100 | **100** (batch désactivé) | **$0** | **$0** |
+| **BASIC** | $0 | 400 | **400** (batch désactivé) | **$0** | **$0** |
 | **PRO** | $15 | 20 000 | **~200 000** (batch 10) | **$0.00075** | **$0.000075** (~0.0075 centimes) |
 | **ULTRA** | $59 | 80 000 | **~800 000** (batch 10) | **$0.00074** | **$0.000074** (~0.0074 centimes) |
 | **MEGA** | $149 | 250 000 | **~2 500 000** (batch 10) | **$0.00060** | **$0.000060** (~0.006 centimes) |
@@ -99,9 +99,9 @@
 
 ## 🎯 Recommandations par usage
 
-### Usage test / développement (< 100 factures/mois)
+### Usage test / développement (< 400 factures/mois)
 **→ Plan BASIC (Gratuit)**
-- 100 requêtes/mois = ~3-4 factures/jour
+- 400 requêtes/mois = ~13-14 factures/jour
 - **Batch désactivé** (1 facture = 1 requête)
 - OCR basique uniquement (pas de compliance, pas de Factur-X)
 - Parfait pour tester et évaluer l'API
@@ -174,10 +174,10 @@ Sur les plans payants (PRO, ULTRA, MEGA), utilisez `/ocr/batch` pour traiter plu
 
 ### Planification intelligente
 
-Pour le plan BASIC (100 req/mois) :
+Pour le plan BASIC (400 req/mois) :
 - ⚠️ **Batch désactivé** : Traitez les factures une par une
 - Utilisez le cache pour éviter les retraitements
-- Priorisez les factures importantes (100 factures max/mois)
+- Priorisez les factures importantes (400 factures max/mois)
 
 Pour les plans payants (PRO+) :
 - Groupez les factures non urgentes pour traitement batch (économie 90%)
@@ -190,8 +190,8 @@ Pour les plans payants (PRO+) :
 
 | Fonctionnalité | BASIC | PRO | ULTRA | MEGA |
 |----------------|-------|-----|-------|------|
-| **Requêtes/mois** | 100 | 20 000 | 80 000 | 250 000 |
-| **Factures max/mois** | 100 | ~200 000 | ~800 000 | ~2 500 000 |
+| **Requêtes/mois** | 400 | 20 000 | 80 000 | 250 000 |
+| **Factures max/mois** | 400 | ~200 000 | ~800 000 | ~2 500 000 |
 | **Prix/mois** | $0 | $15 | $59 | $149 |
 | **Batch processing** | ❌ Désactivé | ✅ 10 fichiers | ✅ 10 fichiers | ✅ 10 fichiers |
 | **Compliance FR** | ❌ | ✅ | ✅ | ✅ |
@@ -260,10 +260,10 @@ Les endpoints suivants **ne consomment pas** de quota :
 
 ## 💰 Exemples de coûts réels
 
-### Scénario 1 : Test / Développement (< 100 factures/mois)
+### Scénario 1 : Test / Développement (< 400 factures/mois)
 
-- **Factures à traiter** : 50-100/mois
-- **Plan recommandé** : BASIC (100/mois)
+- **Factures à traiter** : 50-400/mois
+- **Plan recommandé** : BASIC (400/mois)
 - **Coût mensuel** : **$0**
 - **Coût par facture** : **$0**
 - **Limitation** : Batch désactivé, OCR basique uniquement
@@ -309,7 +309,7 @@ Les endpoints suivants **ne consomment pas** de quota :
 
 ### Pour tester l'API
 → **Plan BASIC** ($0/mois)
-- 100 requêtes/mois = 100 factures gratuites
+- 400 requêtes/mois = 400 factures gratuites
 - **Batch désactivé** (1 facture = 1 requête)
 - OCR basique uniquement (pas de compliance, pas de Factur-X)
 - Testez pendant 1-2 semaines
