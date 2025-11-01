@@ -32,6 +32,39 @@ app = FastAPI(
     redoc_url="/redoc"
 )
 
+# Ajouter le support d'authentification dans Swagger
+from fastapi.openapi.utils import get_openapi
+
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="OCR Facture API",
+        version="1.0.0",
+        description="API professionnelle pour l'extraction automatique de données de factures via OCR.",
+        routes=app.routes,
+    )
+    # Ajouter le schéma de sécurité
+    openapi_schema["components"]["securitySchemes"] = {
+        "RapidAPIProxySecret": {
+            "type": "apiKey",
+            "in": "header",
+            "name": "X-RapidAPI-Proxy-Secret",
+            "description": "Secret pour l'authentification RapidAPI"
+        }
+    }
+    # Appliquer la sécurité aux endpoints protégés
+    for path, path_item in openapi_schema["paths"].items():
+        if path not in ["/", "/health", "/docs", "/redoc", "/openapi.json"]:
+            for method in path_item:
+                if method in ["post", "get", "put", "delete", "patch"]:
+                    if "security" not in path_item[method]:
+                        path_item[method]["security"] = [{"RapidAPIProxySecret": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
+
 # CORS middleware
 app.add_middleware(
     CORSMiddleware,
