@@ -267,9 +267,10 @@ def extract_invoice_data(ocr_result: dict) -> dict:
     
     # Recherche du numéro de facture
     invoice_patterns = [
+        r'facture\s*n°\s*[:=]?\s*([A-Z0-9\-]+)',
         r'facture\s*(?:n°|no|number)?\s*[:=]?\s*([A-Z0-9\-]+)',
         r'invoice\s*(?:#|n°|no|number)?\s*[:=]?\s*([A-Z0-9\-]+)',
-        r'n°\s*(?:facture|invoice)?\s*[:=]?\s*([A-Z0-9\-]+)',
+        r'n°\s*[:=]?\s*([A-Z0-9\-]+)',
         r'ref[ée]rence\s*[:=]?\s*([A-Z0-9\-]+)'
     ]
     for pattern in invoice_patterns:
@@ -278,24 +279,73 @@ def extract_invoice_data(ocr_result: dict) -> dict:
             extracted["invoice_number"] = match.group(1).upper()
             break
     
-    # Recherche du vendeur/fournisseur (généralement dans les premières lignes)
-    vendor_keywords = ["sarl", "ltd", "inc", "sas", "sa", "eurl", "société"]
-    for i, line in enumerate(lines[:10]):  # Chercher dans les 10 premières lignes
-        line_lower = line.lower()
-        if any(keyword in line_lower for keyword in vendor_keywords) or i < 3:
-            if len(line) > 5 and len(line) < 100:
-                extracted["vendor"] = line.strip()
+    # Si pas trouvé, chercher dans les lignes directement
+    if not extracted["invoice_number"]:
+        for line in lines:
+            # Chercher "FAC-2024-001" ou similaire
+            match = re.search(r'([A-Z]{2,4}[-]?\d{4}[-]?\d{2,4})', line.upper())
+            if match:
+                extracted["invoice_number"] = match.group(1)
                 break
     
-    # Recherche du client
-    client_keywords = ["client", "customer", "billing to", "facturé à"]
-    for keyword in client_keywords:
-        for line in lines:
-            if keyword in line.lower():
-                extracted["client"] = line.strip()
+    # Recherche du vendeur/fournisseur (généralement après "Vendeur:")
+    vendor_found = False
+    for i, line in enumerate(lines):
+        line_lower = line.lower()
+        # Si on trouve "Vendeur:" ou "Vendor:", prendre la ligne suivante
+        if "vendeur" in line_lower or "vendor" in line_lower:
+            # Prendre les lignes suivantes jusqu'à trouver une société
+            for j in range(i+1, min(i+5, len(lines))):
+                next_line = lines[j].strip()
+                # Ignorer les lignes vides ou trop courtes
+                if len(next_line) > 5 and len(next_line) < 100:
+                    # Ignorer les lignes qui sont des adresses (contiennent des chiffres et "rue", "avenue", etc.)
+                    if not re.search(r'\d+\s+(rue|avenue|boulevard|street|road)', next_line.lower()):
+                        vendor_keywords = ["sarl", "ltd", "inc", "sas", "sa", "eurl", "société", "company"]
+                        if any(keyword in next_line.lower() for keyword in vendor_keywords) or j == i+1:
+                            extracted["vendor"] = next_line
+                            vendor_found = True
+                            break
+            if vendor_found:
                 break
-        if extracted["client"]:
-            break
+    
+    # Fallback: chercher dans les premières lignes
+    if not vendor_found:
+        vendor_keywords = ["sarl", "ltd", "inc", "sas", "sa", "eurl", "société"]
+        for i, line in enumerate(lines[:10]):
+            line_lower = line.lower()
+            if any(keyword in line_lower for keyword in vendor_keywords):
+                if len(line) > 5 and len(line) < 100 and "facture" not in line_lower:
+                    extracted["vendor"] = line.strip()
+                    break
+    
+    # Recherche du client (généralement après "Client:" ou "Customer:")
+    client_found = False
+    for i, line in enumerate(lines):
+        line_lower = line.lower()
+        # Si on trouve "Client:" ou "Customer:", prendre la ligne suivante
+        if ("client" in line_lower or "customer" in line_lower) and ":" in line:
+            # Prendre la ligne suivante (nom du client)
+            if i+1 < len(lines):
+                next_line = lines[i+1].strip()
+                # Ignorer les lignes vides ou trop courtes, ou qui sont des adresses
+                if len(next_line) > 3 and len(next_line) < 100:
+                    if not re.search(r'\d+\s+(rue|avenue|boulevard|street|road)', next_line.lower()):
+                        # Si la ligne suivante ne contient pas de chiffres (pas une adresse)
+                        if not re.search(r'^\d+', next_line):
+                            extracted["client"] = next_line.rstrip('.')
+                            client_found = True
+                            break
+    
+    # Fallback: chercher "Client ABC" ou similaire dans la même ligne
+    if not client_found:
+        for line in lines:
+            match = re.search(r'client\s+([A-Z][A-Za-z\s]+)', line, re.IGNORECASE)
+            if match:
+                client_name = match.group(1).strip()
+                if len(client_name) > 2 and len(client_name) < 50:
+                    extracted["client"] = client_name.rstrip('.')
+                    break
     
     return extracted
 
