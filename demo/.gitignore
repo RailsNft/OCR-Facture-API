@@ -1,5 +1,4 @@
 node_modules/
-# dist/ - Ne pas ignorer, nécessaire pour le déploiement
 .env.local
 .env.*.local
 *.log
