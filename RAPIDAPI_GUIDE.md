@@ -34,9 +34,12 @@ Ce guide vous accompagne étape par étape pour publier votre API OCR Facture su
 
 ### Informations de base
 
-- **API Name**: `OCR Facture API` ou `Invoice OCR API`
-- **API Base URL**: Votre URL de déploiement (ex: `https://votre-app.railway.app`)
-- **Category**: Sélectionnez `Business` ou `Finance` ou `Developer Tools`
+- **API Name**: `OCR Facture FR → JSON + Factur-X` ⭐ **RECOMMANDÉ pour SEO**
+  - Alternative si le nom est pris : `OCR Facture FR JSON Factur-X`
+- **API Base URL**: Votre URL de déploiement (ex: `https://ocr-facture-api-production.up.railway.app`)
+- **Category**: 
+  - **Primaire** : `Documents & OCR` (moins concurrentielle)
+  - **Secondaire** : `Finance & Accounting` (très recherchée)
 - **Short Description**: 
   ```
   Extract structured data from invoice images using OCR. Automatically detects amounts, dates, invoice numbers, vendor, and client information.
