@@ -174,7 +174,13 @@ def check_rate_limit(
         window = timedelta(days=30)
         key_suffix = "monthly"
     elif limit_type == "daily":
-        limit = plan_limits.get("daily") or (plan_limits["monthly"] // 30)
+        # Calculer la limite quotidienne : monthly / 30, arrondi au supérieur pour être plus généreux
+        if plan_limits.get("daily") is not None:
+            limit = plan_limits["daily"]
+        else:
+            # Arrondir au supérieur pour éviter les limites trop restrictives
+            import math
+            limit = math.ceil(plan_limits["monthly"] / 30)
         window = timedelta(days=1)
         key_suffix = "daily"
     elif limit_type == "per_minute":
