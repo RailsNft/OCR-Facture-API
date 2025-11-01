@@ -9,6 +9,11 @@ import pytesseract
 from PIL import Image
 import io
 import re
+import os
+
+# Configurer le chemin Tesseract si nécessaire (pour certains environnements Docker)
+if os.path.exists('/usr/bin/tesseract'):
+    pytesseract.pytesseract.tesseract_cmd = '/usr/bin/tesseract'
 
 app = FastAPI(
     title="OCR Facture API",
@@ -244,11 +249,33 @@ async def root():
 
 @app.get("/health")
 async def health_check():
-    return {
+    """Vérifie l'état de santé de l'API et les dépendances"""
+    health_status = {
         "status": "healthy",
         "debug_mode": settings.debug_mode,
         "api_version": "1.0.0"
     }
+    
+    # Vérifier si Tesseract est disponible
+    try:
+        import subprocess
+        result = subprocess.run(['tesseract', '--version'], 
+                              capture_output=True, 
+                              text=True, 
+                              timeout=5)
+        if result.returncode == 0:
+            health_status["tesseract"] = "available"
+            # Extraire la version
+            version_line = result.stdout.split('\n')[0] if result.stdout else "unknown"
+            health_status["tesseract_version"] = version_line
+        else:
+            health_status["tesseract"] = "error"
+            health_status["status"] = "degraded"
+    except Exception as e:
+        health_status["tesseract"] = f"error: {str(e)}"
+        health_status["status"] = "degraded"
+    
+    return health_status
 
 
 @app.post("/ocr/upload", response_model=OCRResponse)
