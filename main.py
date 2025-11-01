@@ -2,7 +2,7 @@ from fastapi import FastAPI, File, UploadFile, HTTPException, Form, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import base64
-from typing import Optional
+from typing import Optional, List, Dict
 from config import settings
 from pydantic import BaseModel
 import pytesseract
@@ -10,6 +10,16 @@ from PIL import Image
 import io
 import re
 import os
+try:
+    import fitz  # PyMuPDF
+    PDF_SUPPORT = True
+except ImportError:
+    PDF_SUPPORT = False
+    try:
+        from pdf2image import convert_from_bytes
+        PDF_SUPPORT = True
+    except ImportError:
+        PDF_SUPPORT = False
 
 # Configurer le chemin Tesseract si nécessaire (pour certains environnements Docker)
 # Essayer plusieurs chemins possibles
@@ -26,8 +36,8 @@ for path in tesseract_paths:
 
 app = FastAPI(
     title="OCR Facture API",
-    description="API professionnelle pour l'extraction automatique de données de factures via OCR. Extrait le texte, les montants, dates, numéros de facture et autres informations structurées.",
-    version="1.0.0",
+    description="API professionnelle pour l'extraction automatique de données de factures via OCR. Extrait le texte, les montants, dates, numéros de facture, lignes de facture (items) et autres informations structurées. Inclut des scores de confiance pour chaque donnée extraite.",
+    version="1.1.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
@@ -105,11 +115,94 @@ class OCRResponse(BaseModel):
     data: Optional[dict] = None
     error: Optional[str] = None
     extracted_data: Optional[dict] = None
+    confidence_scores: Optional[dict] = None
 
 
-def perform_ocr(image_data: bytes, language: str = "fra") -> dict:
+def process_pdf_multi_page(pdf_data: bytes, language: str) -> dict:
+    """
+    Traite un PDF multi-pages et fusionne les résultats
+    """
+    all_text = []
+    all_data = []
+    
+    try:
+        # Essayer PyMuPDF d'abord (plus rapide)
+        if PDF_SUPPORT:
+            try:
+                import fitz
+                pdf_document = fitz.open(stream=pdf_data, filetype="pdf")
+                for page_num in range(len(pdf_document)):
+                    page = pdf_document[page_num]
+                    pix = page.get_pixmap(matrix=fitz.Matrix(2, 2))  # Augmenter la résolution
+                    img_data = pix.tobytes("png")
+                    image = Image.open(io.BytesIO(img_data))
+                    
+                    # OCR sur cette page
+                    page_text = pytesseract.image_to_string(image, lang=language)
+                    page_data = pytesseract.image_to_data(image, lang=language, output_type=pytesseract.Output.DICT)
+                    
+                    all_text.append(f"--- Page {page_num + 1} ---\n{page_text}")
+                    all_data.append(page_data)
+                
+                pdf_document.close()
+                
+                # Fusionner les textes
+                merged_text = "\n\n".join(all_text)
+                
+                return {
+                    "text": merged_text,
+                    "data": all_data[0] if all_data else {},  # Prendre les données de la première page
+                    "language": language,
+                    "pages_processed": len(all_text)
+                }
+            except Exception as e:
+                # Si PyMuPDF échoue, essayer pdf2image
+                pass
+        
+        # Fallback sur pdf2image
+        if PDF_SUPPORT:
+            try:
+                from pdf2image import convert_from_bytes
+                images = convert_from_bytes(pdf_data, dpi=300)
+                
+                for page_num, image in enumerate(images):
+                    # OCR sur cette page
+                    page_text = pytesseract.image_to_string(image, lang=language)
+                    page_data = pytesseract.image_to_data(image, lang=language, output_type=pytesseract.Output.DICT)
+                    
+                    all_text.append(f"--- Page {page_num + 1} ---\n{page_text}")
+                    all_data.append(page_data)
+                
+                # Fusionner les textes
+                merged_text = "\n\n".join(all_text)
+                
+                return {
+                    "text": merged_text,
+                    "data": all_data[0] if all_data else {},
+                    "language": language,
+                    "pages_processed": len(all_text)
+                }
+            except Exception as e:
+                raise HTTPException(
+                    status_code=500,
+                    detail=f"Erreur lors du traitement PDF: {str(e)}. Assurez-vous que poppler est installé."
+                )
+        
+        raise HTTPException(
+            status_code=500,
+            detail="Support PDF non disponible. Installez PyMuPDF ou pdf2image."
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erreur lors du traitement PDF: {str(e)}")
+
+
+def perform_ocr(image_data: bytes, language: str = "fra", is_pdf: bool = False) -> dict:
     """
     Effectue l'OCR sur l'image utilisant pytesseract
+    Supporte les PDFs multi-pages
     """
     try:
         # Vérifier que Tesseract est disponible
@@ -120,6 +213,10 @@ def perform_ocr(image_data: bytes, language: str = "fra") -> dict:
                 status_code=500, 
                 detail=f"Tesseract OCR n'est pas disponible: {str(tess_err)}"
             )
+        
+        # Traiter les PDFs séparément
+        if is_pdf:
+            return process_pdf_multi_page(image_data, language)
         
         # Ouvrir l'image depuis les bytes
         image = Image.open(io.BytesIO(image_data))
@@ -165,9 +262,156 @@ def perform_ocr(image_data: bytes, language: str = "fra") -> dict:
         raise HTTPException(status_code=500, detail=f"Erreur lors du traitement OCR: {str(e)}")
 
 
-def extract_invoice_data(ocr_result: dict) -> dict:
+def calculate_confidence(value, pattern_matches: int, context_quality: float = 1.0) -> float:
+    """
+    Calcule un score de confiance (0-1) pour une donnée extraite
+    """
+    if value is None:
+        return 0.0
+    
+    # Base confidence selon le nombre de matches trouvés
+    base_confidence = min(0.7 + (pattern_matches * 0.1), 0.95)
+    
+    # Ajuster selon la qualité du contexte
+    confidence = base_confidence * context_quality
+    
+    # Bonus si la valeur semble valide
+    if isinstance(value, (int, float)) and value > 0:
+        confidence = min(confidence + 0.05, 1.0)
+    elif isinstance(value, str) and len(value) > 2:
+        confidence = min(confidence + 0.05, 1.0)
+    
+    return round(confidence, 2)
+
+
+def extract_invoice_items(lines: List[str], text_lower: str) -> List[Dict]:
+    """
+    Extrait les lignes/articles de la facture
+    """
+    items = []
+    
+    # Patterns pour détecter les lignes de facture
+    # Format typique: "Description [Qté] [Prix unitaire] [Total]"
+    
+    # Chercher la section des items (généralement entre "Description" et "Total")
+    start_idx = None
+    end_idx = None
+    
+    for i, line in enumerate(lines):
+        line_lower = line.lower()
+        # Détecter le début (header de tableau)
+        if any(keyword in line_lower for keyword in ["description", "désignation", "article", "libellé", "item"]):
+            if any(keyword in line_lower for keyword in ["prix", "montant", "total", "qté", "quantité"]):
+                start_idx = i + 1
+                break
+    
+    # Si pas de header trouvé, chercher après "Client" et avant "Total"
+    if start_idx is None:
+        for i, line in enumerate(lines):
+            if "client" in line.lower() and ":" in line:
+                start_idx = i + 5  # Après les infos client
+                break
+    
+    # Trouver la fin (avant les totaux)
+    for i, line in enumerate(lines):
+        line_lower = line.lower()
+        if any(keyword in line_lower for keyword in ["total", "sous-total", "montant total", "tva"]):
+            if re.search(r'[\d,]+\.?\d*', line):  # Contient un nombre
+                end_idx = i
+                break
+    
+    # Si pas de fin trouvée, utiliser les 15 lignes après le début
+    if start_idx is not None and end_idx is None:
+        end_idx = min(start_idx + 15, len(lines))
+    
+    # Extraire les items dans cette section
+    if start_idx is not None and end_idx is not None:
+        for i in range(start_idx, end_idx):
+            line = lines[i].strip()
+            if not line or len(line) < 5:
+                continue
+            
+            # Ignorer les lignes qui sont clairement des totaux ou headers
+            line_lower = line.lower()
+            if any(keyword in line_lower for keyword in ["total", "tva", "ht", "ttc", "description", "montant"]):
+                if i == start_idx:  # Premier ligne peut être un header
+                    continue
+            
+            # Chercher des patterns de ligne de facture
+            # Format: "Description [nombre] [nombre] [nombre]"
+            # Ou: "Description [nombre]€"
+            
+            # Extraire les nombres de la ligne
+            numbers = re.findall(r'[\d,]+\.?\d*', line)
+            
+            if len(numbers) >= 1:
+                # Essayer d'extraire description et montants
+                # Pattern 1: "Description 500.00 €" (un seul nombre = total)
+                # Pattern 2: "Description 1 500.00 500.00" (qté, prix unitaire, total)
+                # Pattern 3: "Description 500.00" (total seulement)
+                
+                # Séparer description et nombres
+                parts = re.split(r'[\d,]+\.?\d*', line)
+                description = parts[0].strip() if parts else ""
+                
+                # Nettoyer la description
+                description = re.sub(r'^[^\w]+', '', description)  # Enlever caractères spéciaux au début
+                description = description.strip()
+                
+                if len(description) < 3:  # Description trop courte, prendre le début de la ligne
+                    description = re.sub(r'[\d,]+\.?\d*.*$', '', line).strip()
+                
+                # Si description valide et au moins un nombre
+                if len(description) >= 3 and len(numbers) >= 1:
+                    item = {
+                        "description": description,
+                        "quantity": None,
+                        "unit_price": None,
+                        "total": None
+                    }
+                    
+                    # Convertir les nombres
+                    try:
+                        if len(numbers) >= 3:
+                            # Format: Qté Prix_unitaire Total
+                            item["quantity"] = float(numbers[0].replace(',', '.'))
+                            item["unit_price"] = float(numbers[1].replace(',', '.'))
+                            item["total"] = float(numbers[2].replace(',', '.'))
+                        elif len(numbers) >= 2:
+                            # Format: Prix_unitaire Total (ou Qté Total)
+                            # Essayer de deviner lequel est lequel
+                            val1 = float(numbers[0].replace(',', '.'))
+                            val2 = float(numbers[1].replace(',', '.'))
+                            
+                            # Si le premier est petit (< 100), c'est probablement une quantité
+                            if val1 < 100 and val1 == int(val1):
+                                item["quantity"] = val1
+                                item["total"] = val2
+                                if val1 > 0:
+                                    item["unit_price"] = round(val2 / val1, 2)
+                            else:
+                                # Sinon, c'est prix unitaire et total
+                                item["unit_price"] = val1
+                                item["total"] = val2
+                                item["quantity"] = 1.0
+                        else:
+                            # Un seul nombre = total
+                            item["total"] = float(numbers[0].replace(',', '.'))
+                            item["quantity"] = 1.0
+                    except ValueError:
+                        continue
+                    
+                    # Vérifier que l'item est valide
+                    if item["description"] and (item["total"] or item["unit_price"]):
+                        items.append(item)
+    
+    return items
+
+
+def extract_invoice_data(ocr_result: dict) -> tuple[dict, dict]:
     """
     Extrait les données structurées de la facture depuis le résultat OCR
+    Retourne (extracted_data, confidence_scores)
     """
     extracted = {
         "text": "",
@@ -184,6 +428,18 @@ def extract_invoice_data(ocr_result: dict) -> dict:
         "currency": "EUR"
     }
     
+    confidence_scores = {
+        "total": 0.0,
+        "total_ht": 0.0,
+        "total_ttc": 0.0,
+        "tva": 0.0,
+        "date": 0.0,
+        "invoice_number": 0.0,
+        "vendor": 0.0,
+        "client": 0.0,
+        "items": 0.0
+    }
+    
     parsed_text = ocr_result.get("text", "")
     extracted["text"] = parsed_text
     
@@ -192,23 +448,34 @@ def extract_invoice_data(ocr_result: dict) -> dict:
     extracted["lines"] = lines
     
     if not parsed_text:
-        return extracted
+        return extracted, confidence_scores
     
     text_lower = parsed_text.lower()
     
-    # Recherche du total
+    # EXTRACTION DES ITEMS (lignes de facture)
+    items = extract_invoice_items(lines, text_lower)
+    extracted["items"] = items
+    confidence_scores["items"] = calculate_confidence(
+        items if items else None,
+        len(items),
+        0.9 if len(items) > 0 else 0.0
+    )
+    
+    # Recherche du total avec scoring
     total_patterns = [
         r'total\s*(?:ttc|t\.t\.c\.)?\s*[:=]?\s*([\d\s,]+\.?\d*)\s*([€$£]|eur|usd|gbp)?',
         r'montant\s*total\s*[:=]?\s*([\d\s,]+\.?\d*)\s*([€$£]|eur|usd|gbp)?',
         r'total\s*[:=]?\s*([\d\s,]+\.?\d*)\s*([€$£]|eur|usd|gbp)?'
     ]
     
+    total_matches = 0
     for pattern in total_patterns:
         match = re.search(pattern, text_lower)
         if match:
             try:
                 amount_str = match.group(1).replace(' ', '').replace(',', '.')
                 extracted["total"] = float(amount_str)
+                total_matches += 1
                 if match.lastindex >= 2 and match.group(2):
                     currency_map = {"€": "EUR", "$": "USD", "£": "GBP", "eur": "EUR", "usd": "USD", "gbp": "GBP"}
                     extracted["currency"] = currency_map.get(match.group(2).lower(), "EUR")
@@ -216,77 +483,123 @@ def extract_invoice_data(ocr_result: dict) -> dict:
             except:
                 pass
     
-    # Recherche du total HT
+    confidence_scores["total"] = calculate_confidence(extracted["total"], total_matches)
+    
+    # Recherche du total HT avec scoring
     ht_patterns = [
         r'total\s*ht\s*[:=]?\s*([\d\s,]+\.?\d*)',
         r'montant\s*ht\s*[:=]?\s*([\d\s,]+\.?\d*)',
         r'ht\s*[:=]?\s*([\d\s,]+\.?\d*)'
     ]
+    ht_matches = 0
     for pattern in ht_patterns:
         match = re.search(pattern, text_lower)
         if match:
             try:
                 amount_str = match.group(1).replace(' ', '').replace(',', '.')
                 extracted["total_ht"] = float(amount_str)
+                ht_matches += 1
                 break
             except:
                 pass
+    confidence_scores["total_ht"] = calculate_confidence(extracted["total_ht"], ht_matches)
     
-    # Recherche du total TTC
+    # Recherche du total TTC avec scoring
     ttc_patterns = [
         r'total\s*ttc\s*[:=]?\s*([\d\s,]+\.?\d*)',
         r'montant\s*ttc\s*[:=]?\s*([\d\s,]+\.?\d*)',
         r'ttc\s*[:=]?\s*([\d\s,]+\.?\d*)'
     ]
+    ttc_matches = 0
     for pattern in ttc_patterns:
         match = re.search(pattern, text_lower)
         if match:
             try:
                 amount_str = match.group(1).replace(' ', '').replace(',', '.')
                 extracted["total_ttc"] = float(amount_str)
+                ttc_matches += 1
                 break
             except:
                 pass
+    confidence_scores["total_ttc"] = calculate_confidence(extracted["total_ttc"], ttc_matches)
     
     # Calcul de la TVA si HT et TTC disponibles
     if extracted["total_ht"] and extracted["total_ttc"]:
         extracted["tva"] = extracted["total_ttc"] - extracted["total_ht"]
+        # Score de confiance pour TVA = moyenne des scores HT et TTC
+        confidence_scores["tva"] = round((confidence_scores["total_ht"] + confidence_scores["total_ttc"]) / 2, 2)
     
-    # Recherche de la date
+    # Recherche de la date avec scoring
     date_patterns = [
         r'\b(\d{2}[/-]\d{2}[/-]\d{4})\b',
         r'\b(\d{4}[/-]\d{2}[/-]\d{2})\b',
         r'\b(\d{1,2}\s+(?:janvier|février|mars|avril|mai|juin|juillet|août|septembre|octobre|novembre|décembre|jan|fév|mar|avr|mai|jun|jul|aoû|sep|oct|nov|déc)\s+\d{4})\b',
         r'\b(\d{1,2}\s+(?:january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d{4})\b'
     ]
+    date_matches = 0
     for pattern in date_patterns:
         match = re.search(pattern, parsed_text, re.IGNORECASE)
         if match:
             extracted["date"] = match.group(1)
+            date_matches += 1
             break
+    confidence_scores["date"] = calculate_confidence(extracted["date"], date_matches, 0.95)
     
-    # Recherche du numéro de facture
+    # Recherche améliorée du numéro de facture avec scoring
     invoice_patterns = [
         r'facture\s*n°\s*[:=]?\s*([A-Z0-9\-]+)',
         r'facture\s*(?:n°|no|number)?\s*[:=]?\s*([A-Z0-9\-]+)',
         r'invoice\s*(?:#|n°|no|number)?\s*[:=]?\s*([A-Z0-9\-]+)',
         r'n°\s*[:=]?\s*([A-Z0-9\-]+)',
-        r'ref[ée]rence\s*[:=]?\s*([A-Z0-9\-]+)'
+        r'ref[ée]rence\s*[:=]?\s*([A-Z0-9\-]+)',
+        r'(?:facture|invoice)\s*(?:numéro|number|no|n°)?\s*[:=]?\s*([A-Z]{2,4}[-]?\d{4}[-]?\d{2,4})',
+        r'(?:ref|réf)\.?\s*[:=]?\s*([A-Z0-9\-]{5,20})'
     ]
-    for pattern in invoice_patterns:
-        match = re.search(pattern, text_lower)
-        if match:
-            extracted["invoice_number"] = match.group(1).upper()
+    
+    invoice_matches = 0
+    # Chercher dans les premières lignes (où se trouve généralement le numéro)
+    search_lines = lines[:15] + [parsed_text]
+    
+    for search_text in search_lines:
+        search_lower = search_text.lower() if isinstance(search_text, str) else ""
+        for pattern in invoice_patterns:
+            match = re.search(pattern, search_lower if search_lower else search_text, re.IGNORECASE)
+            if match:
+                invoice_num = match.group(1).upper().strip()
+                # Vérifier que c'est un numéro valide (au moins 3 caractères)
+                if len(invoice_num) >= 3 and len(invoice_num) <= 30:
+                    extracted["invoice_number"] = invoice_num
+                    invoice_matches += 1
+                    break
+        if extracted["invoice_number"]:
             break
     
-    # Si pas trouvé, chercher dans les lignes directement
+    # Si pas trouvé, chercher directement les patterns de numéros dans toutes les lignes
     if not extracted["invoice_number"]:
-        for line in lines:
-            # Chercher "FAC-2024-001" ou similaire
-            match = re.search(r'([A-Z]{2,4}[-]?\d{4}[-]?\d{2,4})', line.upper())
-            if match:
-                extracted["invoice_number"] = match.group(1)
+        # Patterns pour numéros de facture communs
+        direct_patterns = [
+            r'\b([A-Z]{2,4}[-]?\d{4}[-]?\d{2,4})\b',  # FAC-2024-001
+            r'\b([A-Z]{2,}[0-9]{4,})\b',  # FAC2024001
+            r'\b(INV[-]?[0-9]{4,})\b',  # INV-2024
+            r'\b(FA[-]?[0-9]{4,})\b',  # FA-2024
+        ]
+        for line in lines[:20]:  # Chercher dans les 20 premières lignes
+            for pattern in direct_patterns:
+                match = re.search(pattern, line.upper())
+                if match:
+                    invoice_num = match.group(1)
+                    if len(invoice_num) >= 3:
+                        extracted["invoice_number"] = invoice_num
+                        invoice_matches += 1
+                        break
+            if extracted["invoice_number"]:
                 break
+    
+    confidence_scores["invoice_number"] = calculate_confidence(
+        extracted["invoice_number"],
+        invoice_matches,
+        0.9 if invoice_matches > 0 else 0.0
+    )
     
     # Recherche du vendeur/fournisseur (généralement après "Vendeur:")
     vendor_found = False
@@ -345,17 +658,37 @@ def extract_invoice_data(ocr_result: dict) -> dict:
                 client_name = match.group(1).strip()
                 if len(client_name) > 2 and len(client_name) < 50:
                     extracted["client"] = client_name.rstrip('.')
+                    client_found = True
                     break
     
-    return extracted
+    # Calculer les scores de confiance pour vendeur et client
+    confidence_scores["vendor"] = calculate_confidence(
+        extracted["vendor"],
+        1 if vendor_found else 0,
+        0.85 if vendor_found else 0.0
+    )
+    confidence_scores["client"] = calculate_confidence(
+        extracted["client"],
+        1 if client_found else 0,
+        0.85 if client_found else 0.0
+    )
+    
+    return extracted, confidence_scores
 
 
 @app.get("/")
 async def root():
     return {
         "message": "OCR Facture API",
-        "version": "1.0.0",
-        "status": "running"
+        "version": "1.1.0",
+        "status": "running",
+        "features": [
+            "OCR extraction",
+            "Invoice items extraction",
+            "Confidence scoring",
+            "Multi-page PDF support",
+            "Multi-language support"
+        ]
     }
 
 
@@ -365,7 +698,7 @@ async def health_check():
     health_status = {
         "status": "healthy",
         "debug_mode": settings.debug_mode,
-        "api_version": "1.0.0"
+        "api_version": "1.1.0"
     }
     
     # Vérifier si Tesseract est disponible
@@ -404,7 +737,9 @@ async def upload_and_ocr(
     
     **Retourne:**
     - Texte extrait complet
-    - Données structurées (total, date, numéro de facture, vendeur, etc.)
+    - Données structurées (total, date, numéro de facture, vendeur, items/lignes de facture, etc.)
+    - Scores de confiance pour chaque donnée extraite
+    - Support PDF multi-pages (toutes les pages sont traitées et fusionnées)
     """
     # Vérifier le type de fichier
     if not file.content_type or not (file.content_type.startswith("image/") or file.content_type == "application/pdf"):
@@ -415,21 +750,30 @@ async def upload_and_ocr(
     
     try:
         # Lire le contenu du fichier
-        image_data = await file.read()
+        file_data = await file.read()
+        
+        # Détecter si c'est un PDF
+        is_pdf = file.content_type == "application/pdf" or (file.filename and file.filename.lower().endswith('.pdf'))
         
         # Effectuer l'OCR
-        ocr_result = perform_ocr(image_data, language)
+        ocr_result = perform_ocr(file_data, language, is_pdf=is_pdf)
         
-        # Extraire les données structurées
-        extracted_data = extract_invoice_data(ocr_result)
+        # Extraire les données structurées avec scores de confiance
+        extracted_data, confidence_scores = extract_invoice_data(ocr_result)
+        
+        # Préparer les données de réponse
+        response_data = {
+            "text": ocr_result["text"],
+            "language": ocr_result["language"]
+        }
+        if "pages_processed" in ocr_result:
+            response_data["pages_processed"] = ocr_result["pages_processed"]
         
         return OCRResponse(
             success=True,
-            data={
-                "text": ocr_result["text"],
-                "language": ocr_result["language"]
-            },
-            extracted_data=extracted_data
+            data=response_data,
+            extracted_data=extracted_data,
+            confidence_scores=confidence_scores
         )
     
     except HTTPException:
@@ -455,24 +799,34 @@ async def ocr_from_base64(
     """
     try:
         # Décoder l'image base64
+        is_pdf = False
         if image_base64.startswith("data:image"):
             image_base64 = image_base64.split(",")[1]
+        elif image_base64.startswith("data:application/pdf"):
+            is_pdf = True
+            image_base64 = image_base64.split(",")[1]
         
-        image_data = base64.b64decode(image_base64)
+        file_data = base64.b64decode(image_base64)
         
         # Effectuer l'OCR
-        ocr_result = perform_ocr(image_data, language)
+        ocr_result = perform_ocr(file_data, language, is_pdf=is_pdf)
         
-        # Extraire les données structurées
-        extracted_data = extract_invoice_data(ocr_result)
+        # Extraire les données structurées avec scores de confiance
+        extracted_data, confidence_scores = extract_invoice_data(ocr_result)
+        
+        # Préparer les données de réponse
+        response_data = {
+            "text": ocr_result["text"],
+            "language": ocr_result["language"]
+        }
+        if "pages_processed" in ocr_result:
+            response_data["pages_processed"] = ocr_result["pages_processed"]
         
         return OCRResponse(
             success=True,
-            data={
-                "text": ocr_result["text"],
-                "language": ocr_result["language"]
-            },
-            extracted_data=extracted_data
+            data=response_data,
+            extracted_data=extracted_data,
+            confidence_scores=confidence_scores
         )
     
     except Exception as e:

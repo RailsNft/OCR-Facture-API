@@ -7,8 +7,11 @@ API professionnelle pour l'extraction automatique de données de factures via OC
 - ✅ Extraction automatique de texte via OCR (Tesseract)
 - ✅ Détection intelligente des montants (Total, HT, TTC, TVA)
 - ✅ Extraction des dates de facture
-- ✅ Détection du numéro de facture
+- ✅ Détection améliorée du numéro de facture
 - ✅ Identification du vendeur et du client
+- ✅ **Nouveau** : Extraction des lignes de facture (items) avec description, quantité, prix unitaire, total
+- ✅ **Nouveau** : Scores de confiance pour chaque donnée extraite (0-1)
+- ✅ **Nouveau** : Support PDF multi-pages (toutes les pages traitées et fusionnées)
 - ✅ Support multi-langues (Français, Anglais, Allemand, Espagnol, Italien, Portugais)
 - ✅ Format de réponse structuré JSON
 - ✅ Authentification RapidAPI intégrée

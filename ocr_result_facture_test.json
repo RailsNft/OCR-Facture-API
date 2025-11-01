@@ -1,0 +1,44 @@
+{
+  "success": true,
+  "data": {
+    "text": "Facture N°: FAC-2024-001\nDate: 15/03/2024\n\nFACTURE\n\nVendeur:\nSociété Example SARL\n123 Rue de l'Exemple\n75001 Paris, France\n\nClient:\nClient ABC.\n456 Avenue du Client\n69000 Lyon, France\n\nDescription Montant HT\nConsultation technique 500.00 €\nInstallation système 350.00 €\nFormation équipe 19208 €\nTotal HT: 1042.08 €\nTVA (20%) 20842 €\nTotal TTC: 1250.50 €\n\nConditions de paiement\nPaiement à 30 jours\nMerci de votre confiance !\n",
+    "language": "fra"
+  },
+  "error": null,
+  "extracted_data": {
+    "text": "Facture N°: FAC-2024-001\nDate: 15/03/2024\n\nFACTURE\n\nVendeur:\nSociété Example SARL\n123 Rue de l'Exemple\n75001 Paris, France\n\nClient:\nClient ABC.\n456 Avenue du Client\n69000 Lyon, France\n\nDescription Montant HT\nConsultation technique 500.00 €\nInstallation système 350.00 €\nFormation équipe 19208 €\nTotal HT: 1042.08 €\nTVA (20%) 20842 €\nTotal TTC: 1250.50 €\n\nConditions de paiement\nPaiement à 30 jours\nMerci de votre confiance !\n",
+    "lines": [
+      "Facture N°: FAC-2024-001",
+      "Date: 15/03/2024",
+      "FACTURE",
+      "Vendeur:",
+      "Société Example SARL",
+      "123 Rue de l'Exemple",
+      "75001 Paris, France",
+      "Client:",
+      "Client ABC.",
+      "456 Avenue du Client",
+      "69000 Lyon, France",
+      "Description Montant HT",
+      "Consultation technique 500.00 €",
+      "Installation système 350.00 €",
+      "Formation équipe 19208 €",
+      "Total HT: 1042.08 €",
+      "TVA (20%) 20842 €",
+      "Total TTC: 1250.50 €",
+      "Conditions de paiement",
+      "Paiement à 30 jours",
+      "Merci de votre confiance !"
+    ],
+    "total": null,
+    "total_ht": 1042.08,
+    "total_ttc": 1250.5,
+    "tva": 208.42000000000007,
+    "date": "15/03/2024",
+    "invoice_number": null,
+    "vendor": "Facture N°: FAC-2024-001",
+    "client": "Client:",
+    "items": [],
+    "currency": "EUR"
+  }
+}

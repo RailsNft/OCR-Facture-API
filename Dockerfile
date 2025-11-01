@@ -10,6 +10,7 @@ RUN apt-get update && apt-get install -y \
     tesseract-ocr-ita \
     tesseract-ocr-por \
     libglib2.0-0 \
+    poppler-utils \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
