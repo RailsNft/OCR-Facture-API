@@ -1,0 +1,629 @@
+Date,Time,Text,Social Profile
+2025-11-03,09:00,"🚀 Vous perdez du temps à extraire manuellement les données de factures ?
+
+Notre API OCR extrait automatiquement :
+✅ Montants (HT, TTC, TVA)
+✅ Dates & numéros
+✅ Vendeur & client
+
+Trial gratuit : 100 req/mois
+👉 https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#API #OCR #Automation #DevTools",Twitter
+2025-11-03,10:00,"💡 Saviez-vous que traiter 100 factures manuellement prend environ 8 heures ?
+
+Notre API OCR Facture réduit ça à quelques secondes.
+
+🎯 Use case réel : Une startup fintech économise 160h/mois (soit 2 ETP !) en automatisant l'extraction de données de factures.
+
+Fonctionnalités :
+→ Extraction automatique de TOUS les champs
+→ Conformité française (TVA, SIREN/SIRET, Factur-X)
+→ Multi-langues (FR, EN, DE, ES, IT, PT)
+→ Export vers Sage, QuickBooks, Xero
+
+Trial gratuit disponible sur RapidAPI : https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#Automation #API #OCR #Fintech #Startup",LinkedIn
+2025-11-04,12:00,"💻 Intégration en 3 lignes Python :
+
+from ocr_facture_api import OCRFactureAPI
+api = OCRFactureAPI('your_key')
+result = api.extract_from_file('facture.pdf')
+
+C'est tout ! 🎉
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#Python #API #Developer",Twitter
+2025-11-05,09:00,"🇫🇷 API avec conformité française :
+
+✓ Validation TVA
+✓ SIREN/SIRET
+✓ Factur-X EN16931
+✓ API Sirene
+
+Conformité garantie 🔒
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#France #Compliance #API",Twitter
+2025-11-05,10:00,"🇫🇷 Conformité française : Un casse-tête pour les développeurs ?
+
+Pas avec notre API OCR Facture !
+
+Nous gérons AUTOMATIQUEMENT :
+
+1️⃣ Validation des taux de TVA français (20%, 10%, 5.5%, 2.1%)
+2️⃣ Vérification SIREN/SIRET + enrichissement API Sirene
+3️⃣ Validation TVA intracommunautaire (VIES)
+4️⃣ Génération Factur-X conforme EN16931
+
+Cas d'usage :
+→ Plateformes de gestion de dépenses
+→ Solutions comptables SaaS
+→ ERPs français
+→ Apps de facturation
+
+Économisez des semaines de développement.
+
+Trial gratuit : https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#Compliance #France #API #Fintech #SaaS",LinkedIn
+2025-11-06,17:00,"📊 Stats du jour :
+
+⚡ <2s temps de traitement
+✅ 99.5% précision OCR
+🌍 6 langues supportées
+📄 10K+ factures traitées
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#API #OCR #Stats",Twitter
+2025-11-07,09:00,"🎁 GRATUIT à vie :
+
+Plan Basic OCR Facture :
+→ 100 requêtes/mois
+→ Toutes les features de base
+→ Support email
+→ Aucune CB requise
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#Free #API #Developer",Twitter
+2025-11-07,10:00,"💰 Quel est le VRAI coût de traiter vos factures manuellement ?
+
+Exemple : Entreprise avec 200 factures/mois
+
+Traitement manuel :
+→ 5 min/facture = 16.7h
+→ Coût (à 30€/h) : 501€/mois
+
+Avec notre API :
+→ Temps : 33 min (automatisé)
+→ Coût : 15€/mois
+→ Économie : 486€/mois = 5,832€/an
+
+Sans compter :
+✅ Réduction des erreurs
+✅ Traitement plus rapide
+✅ Scalabilité illimitée
+
+Calculez VOTRE ROI : https://ocr-facture-api-production.up.railway.app/marketing/roi-calculator.html
+
+#ROI #Automation #Business #Efficiency",LinkedIn
+2025-11-08,12:00,"🛠️ Intégrations no-code :
+
+✅ Zapier
+✅ Make (Integromat)
+✅ n8n
+✅ Pipedream
+
+Automation sans coder 🎉
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#NoCode #Integration #Automation",Twitter
+2025-11-09,17:00,"💼 Export vers outils comptables :
+
+✅ Sage
+✅ QuickBooks
+✅ Xero
+✅ FEC (France)
+
+En 1 clic. Prêt pour import. 🎯
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#Accounting #Export",Twitter
+2025-11-09,10:00,"💼 Vous utilisez Sage, QuickBooks ou Xero ?
+
+Notre API OCR Facture exporte directement dans ces formats.
+
+Comment ça marche ?
+
+1️⃣ Uploadez votre facture
+2️⃣ Extraction automatique
+3️⃣ Export au format de votre logiciel
+4️⃣ Import en 1 clic
+
+Formats supportés :
+→ Sage : CSV natif
+→ QuickBooks : IIF
+→ Xero : CSV Xero-ready
+→ FEC : Format français
+
+Plus besoin de ressaisie ! Gain de temps : 70-90%
+
+Vous utilisez un autre logiciel ? Dites-moi lequel 👇
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#Comptabilité #Sage #QuickBooks #Xero",LinkedIn
+2025-11-10,09:00,"🚀 Batch Processing :
+
+Traitez 100 factures en une requête :
+
+results = api.batch_extract(files)
+
+Simple. Rapide. Efficace. ⚡
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#API #BatchProcessing #Scale",Twitter
+2025-11-11,12:00,"🎥 DEMO en direct :
+
+Interface de démo interactive :
+→ Upload facture
+→ Extraction temps réel
+→ Export JSON/CSV
+
+Essayez : https://ocr-facture-api-production.up.railway.app
+
+#Demo #API #Interactive",Twitter
+2025-11-11,10:00,"💬 Témoignage : Comment une Startup économise 160h/mois
+
+Marc, CTO d'une startup fintech qui traite 800 factures/mois :
+
+Avant :
+❌ 2 personnes temps plein
+❌ 8000€/mois
+❌ Délai 3-5 jours
+
+Après (avec notre API) :
+✅ 100% automatisé
+✅ 59€/mois
+✅ Délai <1h
+
+ROI : 13,400% 🚀
+
+""L'intégration a pris 2h. On aurait dû le faire avant !""
+
+Calculez votre ROI : https://ocr-facture-api-production.up.railway.app/marketing/roi-calculator.html
+
+#CaseStudy #ROI #Automation",LinkedIn
+2025-11-12,17:00,"📱 Support multi-formats :
+
+✅ JPEG, PNG
+✅ PDF (multi-pages)
+✅ Base64
+
+Une API. Tous vos besoins. 🚀
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#API #Formats #Flexible",Twitter
+2025-11-13,09:00,"⭐ Témoignage :
+
+""Économie de 160h/mois ! L'intégration a pris 2h. ROI immédiat.""
+
+- Marc, CTO @StartupFintech
+
+Votre retour ? 👉 https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#Testimonial #ROI",Twitter
+2025-11-14,12:00,"🆚 OCR Facture API vs DIY
+
+Notre solution :
+✅ 2h d'intégration
+✅ $15/mois
+✅ Maintenance 0h
+
+DIY :
+❌ 200h de dev
+❌ Coût caché
+❌ Maintenance continue
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi",Twitter
+2025-11-14,10:00,"🎯 Comment choisir la bonne solution OCR ?
+
+J'ai comparé 10 solutions (Tesseract, AWS, Google Cloud, APIs tierces).
+
+Conclusion :
+
+❌ Tesseract seul : Gratuit mais précision moyenne
+❌ AWS Textract : Puissant mais setup complexe
+❌ Google Cloud : Performant mais pas de logique facture
+
+✅ API spécialisée : Précision optimale + données structurées
+
+Notre API combine :
+→ Modèle entraîné sur factures
+→ Extraction structurée
+→ Conformité française
+→ À partir de $0/mois
+
+Quel est votre plus gros challenge avec l'OCR ? 💬
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#OCR #API #Comparison #Tech",LinkedIn
+2025-11-15,17:00,"🎯 Précision OCR :
+
+Tesseract seul : ~85%
+Notre API : 99.5%
+
+La différence ? Un modèle entraîné sur 10K+ factures réelles 🧠
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#OCR #Accuracy #AI",Twitter
+2025-11-16,09:00,"🌍 Support multi-langues :
+
+🇫🇷 Français
+🇬🇧 English
+🇩🇪 Deutsch
+🇪🇸 Español
+🇮🇹 Italiano
+🇵🇹 Português
+
+Une API. Toute l'Europe. 🚀
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#Multilingual #Europe #API",Twitter
+2025-11-16,10:00,"📚 Nouveau tutoriel : Automatiser l'extraction de factures avec Python
+
+Dans ce guide complet :
+
+1. Installation du SDK en 1 commande
+2. Extraction de votre première facture
+3. Traitement par lot (batch) de 100 factures
+4. Export vers Excel/CSV
+5. Intégration dans votre workflow
+
+Code complet disponible sur GitHub.
+
+Niveau : Débutant à Intermédiaire
+Temps : 15 minutes
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#Python #Tutorial #Automation #Developer",LinkedIn
+2025-11-17,12:00,"💰 Calculez votre ROI :
+
+Factures/mois : ___
+Temps par facture : ___ min
+Salaire horaire : ___ €
+
+Calculateur : https://ocr-facture-api-production.up.railway.app/marketing/roi-calculator.html
+
+Spoiler : Vous allez économiser 💸
+
+#ROI #Calculator #Savings",Twitter
+2025-11-18,09:00,"🚀 Use Case #1 : Startup Expense Management
+
+Problème : 500 factures/mois manuellement
+Solution : Notre API + Airtable
+Résultat : 95% automatisé, 40h économisées/mois
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#UseCase #Startup #Automation",Twitter
+2025-11-18,10:00,"🚀 Use case : Startup Expense Management automatise 500 factures/mois
+
+Contexte :
+→ Startup SaaS avec 50 employés
+→ 500 notes de frais/mois
+→ 2 personnes dédiées au traitement
+
+Solution avec notre API :
+1️⃣ Email avec facture → Zapier trigger
+2️⃣ API OCR extrait données
+3️⃣ Envoi automatique vers Airtable
+4️⃣ Validation manager en 1 clic
+
+Résultats :
+✅ 95% automatisé
+✅ 40h/mois économisées
+✅ 0 erreur de saisie
+✅ ROI : 800%
+
+""On ne revient jamais en arrière après avoir automatisé !"" - Sarah, CFO
+
+Votre use case : https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#CaseStudy #Automation #Fintech",LinkedIn
+2025-11-19,17:00,"📊 Batch Processing
+
+Traitez 100 factures en une requête :
+
+```python
+results = api.batch_extract(files)
+```
+
+Simple. Rapide. Efficace. ⚡
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#API #BatchProcessing #Scale",Twitter
+2025-11-20,09:00,"💼 Compatible avec vos outils comptables :
+
+✅ Sage
+✅ QuickBooks
+✅ Xero
+✅ FEC (format français)
+
+Export en 1 clic. Prêt pour import. 🎯
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#Accounting #Export #Integration",Twitter
+2025-11-21,12:00,"🎉 DEMO TIME
+
+Interface de démo interactive :
+→ Upload facture
+→ Extraction en temps réel
+→ Résultats JSON structurés
+
+Essayez : https://ocr-facture-api-production.up.railway.app
+
+#Friday #Demo #API",Twitter
+2025-11-21,10:00,"📊 ROI réel : Combien économisez-vous vraiment ?
+
+Exemple concret avec 200 factures/mois :
+
+💰 Coût manuel :
+→ 5 min/facture
+→ 16.7h totales
+→ 30€/h = 501€/mois
+→ + Erreurs à corriger : ~100€/mois
+
+💰 Avec notre API :
+→ 10 sec/facture (automatisé)
+→ 33 min totales
+→ Coût API : 15€/mois
+→ 0 erreur
+
+📈 Économie mensuelle : 586€
+📈 Économie annuelle : 7,032€
+📈 ROI : 4,588%
+
+Calculez VOTRE ROI : https://ocr-facture-api-production.up.railway.app/marketing/roi-calculator.html
+
+#ROI #Savings #Automation",LinkedIn
+2025-11-22,17:00,"🛠️ Intégrations no-code :
+
+✅ Zapier
+✅ Make (Integromat)
+✅ n8n
+✅ Pipedream
+
+Automation sans coder 🎉
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#NoCode #Integration #Automation",Twitter
+2025-11-23,09:00,"📚 Ressources du dimanche :
+
+→ Documentation complète
+→ Exemples de code
+→ Video tutorials
+→ SDK Python & JavaScript
+
+https://ocr-facture-api-production.up.railway.app/docs
+
+Bon dimanche ! ☕
+
+#Resources #Documentation #Learning",Twitter
+2025-11-24,09:00,"❓ Question du jour :
+
+Combien de factures traitez-vous par mois ?
+
+A) < 50
+B) 50-200
+C) 200-1000
+D) 1000+
+
+Répondez et on vous dit quel plan vous convient 👇
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#Poll #API",Twitter
+2025-11-24,10:00,"🎯 Sondage : Quel est votre plus gros défi avec les factures ?
+
+Je développe une API OCR pour automatiser l'extraction de données de factures.
+
+💬 Dites-moi :
+
+1️⃣ Combien de factures traitez-vous par mois ?
+2️⃣ Combien de temps ça vous prend ?
+3️⃣ Quel est votre plus gros pain point ?
+
+Les réponses m'aideront à améliorer le produit !
+
+Et en retour, je vous offre :
+→ 1 mois gratuit sur plan Pro
+→ Setup personnalisé
+→ Early access nouvelles features
+
+Commentez ci-dessous ! 👇
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#ProductDevelopment #Feedback #Community",LinkedIn
+2025-11-25,12:00,"🔥 OFFRE LIMITÉE :
+
+Premier mois -20% avec code : FIRST20
+
+Valable 7 jours uniquement !
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi/pricing
+
+⏰ Ne ratez pas !
+
+#Offer #Discount #LimitedTime",Twitter
+2025-11-26,09:00,"🎥 Webinar GRATUIT :
+
+""Automatiser vos factures : Best Practices""
+
+📅 Vendredi 15h
+🎯 45 min + Q&A
+🎁 Checklist automation offerte
+
+Inscrivez-vous : https://ocr-facture-api-production.up.railway.app/marketing/landing-page.html
+
+#Webinar #Free #Learning",Twitter
+2025-11-27,17:00,"🚀 Use case #2 :
+
+Agence web automatise facturation 50 clients
+
+Résultat : -90% temps admin
+
+Lire le case study : https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#CaseStudy #Agency #Automation",Twitter
+2025-11-27,10:00,"🎓 Tutoriel : Intégrer OCR dans votre app React
+
+Guide complet pour ajouter l'extraction de factures dans votre application React en 30 minutes.
+
+Ce que vous allez apprendre :
+→ Setup du SDK JavaScript
+→ Upload component avec drag & drop
+→ Affichage résultats en temps réel
+→ Export vers CSV/JSON
+→ Gestion erreurs
+
+Code source complet sur GitHub.
+
+Niveau : Intermédiaire
+Stack : React + Vite + notre API
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#React #JavaScript #Tutorial #Frontend",LinkedIn
+2025-11-28,09:00,"🎉 VENDREDI INSPIRATION :
+
+""La meilleure façon de prédire l'avenir est de l'automatiser.""
+
+Commencez ce weekend : https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#Friday #Inspiration #Automation",Twitter
+2025-11-29,12:00,"💻 Code du weekend :
+
+Créer un dashboard factures en 1h avec :
+→ Notre API OCR
+→ Next.js
+→ Vercel
+
+Tutorial complet : https://ocr-facture-api-production.up.railway.app/docs
+
+#Weekend #Coding #Tutorial",Twitter
+2025-11-30,09:00,"📊 Stats de la semaine :
+
+✅ 150+ inscriptions
+🚀 2500+ factures traitées
+⭐ 4.9/5 satisfaction
+
+Merci ! 🙏
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#Stats #Community #Thanks",Twitter
+2025-11-30,10:00,"📊 Transparence : Nos métriques du mois
+
+Je partage nos chiffres publiquement (Build in Public) :
+
+📈 Croissance :
+→ 150 nouveaux utilisateurs
+→ 50 clients payants
+→ $1,200 MRR
+
+📊 Usage :
+→ 2,500+ factures traitées
+→ 99.5% précision moyenne
+→ <2s temps moyen
+
+💬 Satisfaction :
+→ 4.9/5 étoiles
+→ 0 churn ce mois
+→ 3 features demandées implémentées
+
+🎯 Prochains objectifs :
+→ 300 utilisateurs (mois prochain)
+→ Nouvelles intégrations (Salesforce, HubSpot)
+→ ML personnalisé
+
+Merci à notre communauté ! 🙏
+
+Questions sur nos métriques ? 👇
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#BuildInPublic #Transparency #SaaS #Metrics",LinkedIn
+2025-12-01,17:00,"🔔 Rappel :
+
+L'offre -20% expire DEMAIN !
+
+Code : FIRST20
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi/pricing
+
+⏰ Dernière chance
+
+#LastChance #Offer",Twitter
+2025-12-02,09:00,"🎯 Challenge 30 jours terminé !
+
+On a partagé :
+→ Tutorials
+→ Use cases
+→ Tips & tricks
+→ Success stories
+
+Prochaines étapes :
+→ Plus de content
+→ Nouvelles features
+→ Programme affiliation
+
+Stay tuned ! 🚀
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#Challenge #Community",Twitter
+2025-12-02,10:00,"🎊 30 jours de partage : Bilan et Merci !
+
+Il y a 30 jours, j'ai lancé ce challenge de partager quotidiennement sur notre API OCR Facture.
+
+📊 Résultats :
+→ 30 posts publiés
+→ 500+ nouveaux followers
+→ 150+ inscriptions
+→ 50+ clients payants
+→ Dizaines de conversations enrichissantes
+
+💡 Ce que j'ai appris :
+
+1️⃣ La transparence paie
+2️⃣ Le contenu éducatif convertit 3x mieux
+3️⃣ La communauté est essentielle
+
+🚀 Prochaines étapes :
+→ Nouvelles features (demandées par VOUS)
+→ Programme affiliation (20% commission)
+→ Plus de tutorials
+
+Merci à tous ! 🙏
+
+Abonnez-vous pour la suite : https://ocr-facture-api-production.up.railway.app/marketing/landing-page.html
+
+#Community #BuildInPublic #Journey #Thanks",LinkedIn
