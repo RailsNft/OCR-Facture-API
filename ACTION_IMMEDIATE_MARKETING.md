@@ -37,7 +37,7 @@ Notre API OCR extrait automatiquement :
 ✅ Vendeur & client
 
 Trial gratuit : 100 req/mois
-👉 https://rapidapi.com/hub
+👉 https://rapidapi.com/pmouniama/api/ocrfactureapi
 
 #API #OCR #Automation
 ```

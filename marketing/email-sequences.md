@@ -26,9 +26,9 @@ Votre clé API est activée et vos 100 requêtes gratuites vous attendent.
 
 📚 Pour bien démarrer :
 
-→ Documentation complète : [lien]
-→ Quick Start (5 min) : [lien]
-→ Exemples de code Python/JS : [lien]
+→ Documentation complète : https://rapidapi.com/pmouniama/api/ocrfactureapi
+→ Quick Start (5 min) : https://rapidapi.com/pmouniama/api/ocrfactureapi
+→ Exemples de code Python/JS : https://rapidapi.com/pmouniama/api/ocrfactureapi
 
 💡 Votre première facture en 3 étapes :
 
@@ -47,7 +47,7 @@ Besoin d'aide ? Répondez à cet email, je réponds en <24h.
 Philippe
 Founder, OCR Facture API
 
-P.S. Voici une facture de test pour commencer : [lien]
+P.S. Voici une facture de test pour commencer : https://rapidapi.com/pmouniama/api/ocrfactureapi
 ```
 
 ---
@@ -77,7 +77,7 @@ Cas d'usage réels :
 
 📊 Benchmark : 100 factures traitées en ~30 secondes
 
-Tutorial complet : [lien]
+Tutorial complet : https://rapidapi.com/pmouniama/api/ocrfactureapi
 
 Questions ? Répondez à cet email.
 
@@ -113,7 +113,7 @@ ROI : 13,400% 🚀
 
 "L'intégration a pris 2 heures. On aurait dû le faire avant !" - Marc
 
-Lire le case study complet : [lien]
+Lire le case study complet : https://rapidapi.com/pmouniama/api/ocrfactureapi
 
 Votre situation ressemble à celle de Marc ?
 Calculez votre ROI : [lien calculateur]
@@ -147,7 +147,7 @@ Pour continuer sans interruption, passez au plan Pro :
 🎁 OFFRE SPÉCIALE : -20% avec code FIRST20
 Soit 12$/mois au lieu de 15$ (premier mois)
 
-Passer au plan Pro : [lien]
+Passer au plan Pro : https://rapidapi.com/pmouniama/api/ocrfactureapi
 
 Questions sur les plans ? Répondez à cet email.
 
@@ -177,7 +177,7 @@ Avec le plan Pro, vous débloquez :
 
 Prix : 12$/mois (au lieu de 15$) avec le code
 
-Activer maintenant : [lien]
+Activer maintenant : https://rapidapi.com/pmouniama/api/ocrfactureapi
 
 Cette offre ne reviendra pas.
 
@@ -209,7 +209,7 @@ Votre abonnement est actif. Voici comment tirer le meilleur parti :
 🎯 OBJECTIF : Traiter vos 100 premières factures
 
 📞 Besoin d'aide ?
-- Documentation : [lien]
+- Documentation : https://rapidapi.com/pmouniama/api/ocrfactureapi
 - Support prioritaire : support@ocr-facture-api.com
 - Je réponds en <4h
 
@@ -305,7 +305,7 @@ Depuis votre dernière visite, nous avons ajouté :
 ✅ Cache automatique (2x plus rapide)
 ✅ Nouveaux SDKs Python & JavaScript
 
-Revenez tester : [lien]
+Revenez tester : https://rapidapi.com/pmouniama/api/ocrfactureapi
 
 Et toujours : votre plan {Plan} vous attend.
 
@@ -332,7 +332,7 @@ Code : COMEBACK
 
 Valable 7 jours.
 
-Activer : [lien]
+Activer : https://rapidapi.com/pmouniama/api/ocrfactureapi
 
 À bientôt ?
 
@@ -366,7 +366,7 @@ Pour éviter toute interruption, passez au plan {Plan Supérieur} :
 
 Prix : {Prix}$/mois
 
-Upgrader maintenant : [lien]
+Upgrader maintenant : https://rapidapi.com/pmouniama/api/ocrfactureapi
 
 Questions ? Appelez-moi : +33 X XX XX XX XX
 

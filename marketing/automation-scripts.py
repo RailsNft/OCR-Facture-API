@@ -25,7 +25,7 @@ LINKEDIN_ACCESS_TOKEN = os.getenv("LINKEDIN_ACCESS_TOKEN", "")
 MAILCHIMP_API_KEY = os.getenv("MAILCHIMP_API_KEY", "")
 MAILCHIMP_LIST_ID = os.getenv("MAILCHIMP_LIST_ID", "")
 
-RAPIDAPI_URL = "https://rapidapi.com/api/ocr-facture-api"
+RAPIDAPI_URL = "https://rapidapi.com/pmouniama/api/ocrfactureapi"
 LANDING_PAGE_URL = "https://ocr-facture-api-production.up.railway.app"
 
 # =====================================================

@@ -39,7 +39,7 @@ Notre API OCR détecte :
 
 Trial gratuit : 100 requêtes/mois
 
-👉 https://rapidapi.com/hub
+👉 https://rapidapi.com/pmouniama/api/ocrfactureapi
 
 #API #OCR #Automation #Python
 ```
@@ -63,7 +63,7 @@ Ouvrez le fichier `social-media-30-days.md` et pour chaque post :
 1. Cliquez **"Create"** dans Hootsuite
 2. Sélectionnez **Twitter uniquement**
 3. **Copiez le texte du post** depuis `social-media-30-days.md`
-4. **Remplacez [lien]** par : `https://rapidapi.com/hub`
+4. **Remplacez [lien]** par : `https://rapidapi.com/pmouniama/api/ocrfactureapi`
 5. Cliquez **"Schedule for later"**
 6. **Programmez** :
    - Jour 1 : Demain 9h
@@ -174,7 +174,7 @@ Notre API OCR extrait automatiquement :
 ✅ Vendeur & client
 
 Trial gratuit : 100 req/mois
-👉 https://rapidapi.com/hub
+👉 https://rapidapi.com/pmouniama/api/ocrfactureapi
 
 #API #OCR #Automation
 ```
@@ -189,7 +189,7 @@ result = api.extract_from_file('facture.pdf')
 
 C'est tout ! 🎉
 
-https://rapidapi.com/hub
+https://rapidapi.com/pmouniama/api/ocrfactureapi
 
 #Python #API #Developer
 ```
@@ -205,7 +205,7 @@ https://rapidapi.com/hub
 
 Conformité garantie 🔒
 
-https://rapidapi.com/hub
+https://rapidapi.com/pmouniama/api/ocrfactureapi
 
 #France #Compliance #API
 ```
@@ -238,7 +238,7 @@ Trial gratuit sur RapidAPI.
 🌍 6 langues
 📄 10K+ factures traitées
 
-Testez : https://rapidapi.com/hub
+Testez : https://rapidapi.com/pmouniama/api/ocrfactureapi
 
 #API #Stats
 ```
@@ -253,7 +253,7 @@ Plan Basic OCR Facture :
 → Support email
 → Aucune CB requise
 
-https://rapidapi.com/hub
+https://rapidapi.com/pmouniama/api/ocrfactureapi
 
 #Free #API #Developer
 ```
@@ -294,7 +294,7 @@ Quel est votre plus gros challenge avec l'OCR ? 💬
 
 En 1 clic. Prêt pour import. 🎯
 
-https://rapidapi.com/hub
+https://rapidapi.com/pmouniama/api/ocrfactureapi
 
 #Accounting #Export
 ```
@@ -398,7 +398,7 @@ Calculez votre ROI : https://ocr-facture-api-production.up.railway.app/marketing
 1. Créez un fichier CSV avec ce format :
 ```csv
 Date,Time,Text,Social Profile
-2024-11-03,09:00,"🚀 Votre tweet ici https://rapidapi.com/hub #API",Twitter
+2024-11-03,09:00,"🚀 Votre tweet ici https://rapidapi.com/pmouniama/api/ocrfactureapi #API",Twitter
 2024-11-03,10:00,"💡 Votre post LinkedIn ici",LinkedIn
 ```
 
