@@ -241,6 +241,7 @@ async def verify_rapidapi_auth(request: Request, call_next):
         or request.url.path.startswith("/demo")
         or request.url.path.startswith("/assets/")
         or request.url.path.startswith("/images/")
+        or request.url.path.startswith("/marketing")
         or request.url.path.startswith("/v1/languages")):
         response = await call_next(request)
         return response
@@ -2335,6 +2336,11 @@ if os.path.exists(demo_dist_path):
 images_path = os.path.join(os.path.dirname(__file__), "docs", "images")
 if os.path.exists(images_path):
     app.mount("/images", StaticFiles(directory=images_path), name="images")
+
+# Servir les fichiers marketing (landing page, calculateur ROI, etc.)
+marketing_path = os.path.join(os.path.dirname(__file__), "marketing")
+if os.path.exists(marketing_path):
+    app.mount("/marketing", StaticFiles(directory=marketing_path, html=True), name="marketing")
 
 if __name__ == "__main__":
     import uvicorn
