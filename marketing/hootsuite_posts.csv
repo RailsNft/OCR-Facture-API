@@ -1,0 +1,111 @@
+Date,Time,Text,Social Profile
+2025-11-03,09:00,"🚀 Vous perdez du temps à extraire manuellement les données de factures ?
+
+Notre API OCR extrait automatiquement :
+✅ Montants (HT, TTC, TVA)
+✅ Dates & numéros
+✅ Vendeur & client
+
+Trial gratuit : 100 req/mois
+👉 https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#API #OCR #Automation #DevTools",Twitter
+2025-11-04,12:00,"💻 Intégration en 3 lignes Python :
+
+from ocr_facture_api import OCRFactureAPI
+api = OCRFactureAPI('your_key')
+result = api.extract_from_file('facture.pdf')
+
+C'est tout ! 🎉
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#Python #API #Developer",Twitter
+2025-11-05,09:00,"🇫🇷 API avec conformité française :
+
+✓ Validation TVA
+✓ SIREN/SIRET
+✓ Factur-X EN16931
+✓ API Sirene
+
+Conformité garantie 🔒
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#France #Compliance #API",Twitter
+2025-11-06,17:00,"📊 Stats du jour :
+
+⚡ <2s temps de traitement
+✅ 99.5% précision OCR
+🌍 6 langues supportées
+📄 10K+ factures traitées
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#API #OCR #Stats",Twitter
+2025-11-07,09:00,"🎁 GRATUIT à vie :
+
+Plan Basic OCR Facture :
+→ 100 requêtes/mois
+→ Toutes les features de base
+→ Support email
+→ Aucune CB requise
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#Free #API #Developer",Twitter
+2025-11-08,12:00,"🛠️ Intégrations no-code :
+
+✅ Zapier
+✅ Make (Integromat)
+✅ n8n
+
+Automation sans coder 🎉
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#NoCode #Integration #Automation",Twitter
+2025-11-09,17:00,"💼 Export vers outils comptables :
+
+✅ Sage
+✅ QuickBooks
+✅ Xero
+✅ FEC (France)
+
+En 1 clic. Prêt pour import. 🎯
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#Accounting #Export",Twitter
+2025-11-10,09:00,"🚀 Batch Processing :
+
+Traitez 100 factures en une requête :
+
+results = api.batch_extract(files)
+
+Simple. Rapide. Efficace. ⚡
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#API #BatchProcessing #Scale",Twitter
+2025-11-11,12:00,"🎥 DEMO en direct :
+
+Interface de démo interactive :
+→ Upload facture
+→ Extraction temps réel
+→ Export JSON/CSV
+
+Essayez : https://ocr-facture-api-production.up.railway.app
+
+#Demo #API #Interactive",Twitter
+2025-11-12,17:00,"📱 Support multi-formats :
+
+✅ JPEG, PNG
+✅ PDF (multi-pages)
+✅ Base64
+
+Une API. Tous vos besoins. 🚀
+
+https://rapidapi.com/pmouniama/api/ocrfactureapi
+
+#API #Formats #Flexible",Twitter
