@@ -1,0 +1,152 @@
+[
+  {
+    "text": "🚀 Vous perdez du temps à extraire manuellement les données de factures ?\n\nNotre API OCR extrait automatiquement :\n✅ Montants (HT, TTC, TVA)\n✅ Dates & numéros\n✅ Vendeur & client\n\nTrial gratuit : 100 req/mois\n👉 https://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#API #OCR #Automation",
+    "scheduled_at": "2025-11-03 09:00:00",
+    "date_readable": "03/11/2025 à 09h"
+  },
+  {
+    "text": "💻 Intégration en 3 lignes Python :\n\nfrom ocr_facture_api import OCRFactureAPI\napi = OCRFactureAPI('your_key')\nresult = api.extract_from_file('facture.pdf')\n\nC'est tout ! 🎉\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#Python #API #Developer",
+    "scheduled_at": "2025-11-04 12:00:00",
+    "date_readable": "04/11/2025 à 12h"
+  },
+  {
+    "text": "🇫🇷 API avec conformité française :\n\n✓ Validation TVA\n✓ SIREN/SIRET\n✓ Factur-X EN16931\n✓ API Sirene\n\nConformité garantie 🔒\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#France #Compliance #API",
+    "scheduled_at": "2025-11-05 09:00:00",
+    "date_readable": "05/11/2025 à 09h"
+  },
+  {
+    "text": "📊 Stats du jour :\n\n⚡ <2s temps de traitement\n✅ 99.5% précision OCR\n🌍 6 langues supportées\n📄 10K+ factures traitées\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#API #OCR #Stats",
+    "scheduled_at": "2025-11-06 17:00:00",
+    "date_readable": "06/11/2025 à 17h"
+  },
+  {
+    "text": "🎁 GRATUIT à vie :\n\nPlan Basic :\n→ 100 requêtes/mois\n→ Toutes les features de base\n→ Support email\n→ Aucune CB requise\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#Free #API #Developer",
+    "scheduled_at": "2025-11-07 09:00:00",
+    "date_readable": "07/11/2025 à 09h"
+  },
+  {
+    "text": "🛠️ Intégrations no-code :\n\n✅ Zapier\n✅ Make\n✅ n8n\n✅ Pipedream\n\nAutomation sans coder 🎉\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#NoCode #Integration",
+    "scheduled_at": "2025-11-08 12:00:00",
+    "date_readable": "08/11/2025 à 12h"
+  },
+  {
+    "text": "💼 Export vers outils comptables :\n\n✅ Sage\n✅ QuickBooks\n✅ Xero\n✅ FEC (France)\n\nEn 1 clic. Prêt pour import. 🎯\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#Accounting #Export",
+    "scheduled_at": "2025-11-09 17:00:00",
+    "date_readable": "09/11/2025 à 17h"
+  },
+  {
+    "text": "🚀 Batch Processing :\n\nTraitez 100 factures en une requête :\n\nresults = api.batch_extract(files)\n\nSimple. Rapide. Efficace. ⚡\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#BatchProcessing #Scale",
+    "scheduled_at": "2025-11-10 09:00:00",
+    "date_readable": "10/11/2025 à 09h"
+  },
+  {
+    "text": "🎥 DEMO en direct :\n\nInterface de démo interactive :\n→ Upload facture\n→ Extraction temps réel\n→ Export JSON/CSV\n\nEssayez : https://ocr-facture-api-production.up.railway.app\n\n#Demo #API #Interactive",
+    "scheduled_at": "2025-11-11 12:00:00",
+    "date_readable": "11/11/2025 à 12h"
+  },
+  {
+    "text": "📱 Support multi-formats :\n\n✅ JPEG, PNG\n✅ PDF (multi-pages)\n✅ Base64\n\nUne API. Tous vos besoins. 🚀\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#API #Formats",
+    "scheduled_at": "2025-11-12 17:00:00",
+    "date_readable": "12/11/2025 à 17h"
+  },
+  {
+    "text": "⭐ Témoignage :\n\n\"Économie de 160h/mois ! L'intégration a pris 2h.\"\n\n- Marc, CTO @StartupFintech\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#Testimonial #ROI",
+    "scheduled_at": "2025-11-13 09:00:00",
+    "date_readable": "13/11/2025 à 09h"
+  },
+  {
+    "text": "🆚 Notre API vs DIY\n\nNotre solution :\n✅ 2h intégration\n✅ $15/mois\n✅ 0h maintenance\n\nDIY :\n❌ 200h dev\n❌ Coûts cachés\n❌ Maintenance continue\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi",
+    "scheduled_at": "2025-11-14 12:00:00",
+    "date_readable": "14/11/2025 à 12h"
+  },
+  {
+    "text": "🎯 Précision OCR :\n\nTesseract seul : ~85%\nNotre API : 99.5%\n\nLa différence ? Modèle entraîné sur 10K+ factures 🧠\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#OCR #AI #Accuracy",
+    "scheduled_at": "2025-11-15 17:00:00",
+    "date_readable": "15/11/2025 à 17h"
+  },
+  {
+    "text": "🌍 Support multi-langues :\n\n🇫🇷 Français\n🇬🇧 English\n🇩🇪 Deutsch\n🇪🇸 Español\n🇮🇹 Italiano\n🇵🇹 Português\n\nUne API. Toute l'Europe. 🚀\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#Multilingual #Europe",
+    "scheduled_at": "2025-11-16 09:00:00",
+    "date_readable": "16/11/2025 à 09h"
+  },
+  {
+    "text": "💰 Calculez votre ROI :\n\nCombien économisez-vous en automatisant vos factures ?\n\nCalculateur interactif : https://ocr-facture-api-production.up.railway.app/marketing/roi-calculator.html\n\nSpoiler : Vous allez économiser ! 💸\n\n#ROI #Calculator",
+    "scheduled_at": "2025-11-17 12:00:00",
+    "date_readable": "17/11/2025 à 12h"
+  },
+  {
+    "text": "🚀 Use Case : Startup Expense Management\n\nProblème : 500 factures/mois manuellement\nSolution : Notre API + Airtable\nRésultat : 95% automatisé, 40h économisées\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#UseCase #Startup",
+    "scheduled_at": "2025-11-18 09:00:00",
+    "date_readable": "18/11/2025 à 09h"
+  },
+  {
+    "text": "📊 Détection automatique :\n\n→ Numéros de facture\n→ Dates d'émission\n→ Montants HT/TTC/TVA\n→ Vendeur & Client\n→ Lignes de facturation\n\nTout. Automatiquement. 🎯\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#Detection #Automation",
+    "scheduled_at": "2025-11-19 17:00:00",
+    "date_readable": "19/11/2025 à 17h"
+  },
+  {
+    "text": "💼 Compatible avec vos outils :\n\n✅ Sage\n✅ QuickBooks\n✅ Xero\n✅ Formats comptables FR\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#Integration #Accounting",
+    "scheduled_at": "2025-11-20 09:00:00",
+    "date_readable": "20/11/2025 à 09h"
+  },
+  {
+    "text": "🎉 VENDREDI DEMO\n\nInterface live :\n→ Drag & drop facture\n→ Extraction instant\n→ Résultats structurés\n\nhttps://ocr-facture-api-production.up.railway.app\n\n#Friday #Demo",
+    "scheduled_at": "2025-11-21 12:00:00",
+    "date_readable": "21/11/2025 à 12h"
+  },
+  {
+    "text": "📱 React Native support :\n\nconst result = await api.extractFromBase64(imageBase64);\n\niOS, Android, Web. Une API. 🚀\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#ReactNative #Mobile",
+    "scheduled_at": "2025-11-22 10:00:00",
+    "date_readable": "22/11/2025 à 10h"
+  },
+  {
+    "text": "☕ Dimanche ressources :\n\n→ Documentation complète\n→ Exemples code\n→ Video tutorials\n→ SDK Python & JS\n\nhttps://ocr-facture-api-production.up.railway.app/docs\n\n#Sunday #Resources",
+    "scheduled_at": "2025-11-23 11:00:00",
+    "date_readable": "23/11/2025 à 11h"
+  },
+  {
+    "text": "❓ Question du jour :\n\nCombien de factures traitez-vous par mois ?\n\nA) < 50\nB) 50-200\nC) 200-1000\nD) 1000+\n\nRépondez ! 👇\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#Poll",
+    "scheduled_at": "2025-11-24 09:00:00",
+    "date_readable": "24/11/2025 à 09h"
+  },
+  {
+    "text": "🔥 OFFRE SPÉCIALE :\n\nPremier mois -20% \nCode : FIRST20\n\nValable 7 jours !\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi/pricing\n\n⏰ Ne ratez pas !\n\n#Offer #Discount",
+    "scheduled_at": "2025-11-25 12:00:00",
+    "date_readable": "25/11/2025 à 12h"
+  },
+  {
+    "text": "🎥 Webinar GRATUIT :\n\n\"Automatiser vos factures : Best Practices\"\n\n📅 Vendredi 15h\n🎯 45 min + Q&A\n\nhttps://ocr-facture-api-production.up.railway.app/marketing/landing-page.html\n\n#Webinar #Free",
+    "scheduled_at": "2025-11-26 09:00:00",
+    "date_readable": "26/11/2025 à 09h"
+  },
+  {
+    "text": "🚀 Use case #2 :\n\nAgence web automatise facturation 50 clients\n\nRésultat : -90% temps admin\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#Agency #Automation",
+    "scheduled_at": "2025-11-27 17:00:00",
+    "date_readable": "27/11/2025 à 17h"
+  },
+  {
+    "text": "🎉 VENDREDI :\n\n\"La meilleure façon de prédire l'avenir est de l'automatiser.\"\n\nCommencez ce weekend : https://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#Friday #Inspiration",
+    "scheduled_at": "2025-11-28 09:00:00",
+    "date_readable": "28/11/2025 à 09h"
+  },
+  {
+    "text": "💻 Code du weekend :\n\nDashboard factures en 1h :\n→ Notre API OCR\n→ Next.js\n→ Vercel\n\nTutorial : https://ocr-facture-api-production.up.railway.app/docs\n\n#Weekend #Coding",
+    "scheduled_at": "2025-11-29 12:00:00",
+    "date_readable": "29/11/2025 à 12h"
+  },
+  {
+    "text": "📊 Stats semaine :\n\n✅ 150+ inscriptions\n🚀 2500+ factures traitées\n⭐ 4.9/5 satisfaction\n\nMerci ! 🙏\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#Stats #Thanks",
+    "scheduled_at": "2025-11-30 09:00:00",
+    "date_readable": "30/11/2025 à 09h"
+  },
+  {
+    "text": "🔔 Rappel :\n\nL'offre -20% expire DEMAIN !\n\nCode : FIRST20\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi/pricing\n\n⏰ Dernière chance",
+    "scheduled_at": "2025-12-01 17:00:00",
+    "date_readable": "01/12/2025 à 17h"
+  },
+  {
+    "text": "🎯 Challenge 30 jours terminé !\n\nOn a partagé :\n→ Tutorials\n→ Use cases\n→ Tips & tricks\n\nProchaines étapes :\n→ Nouvelles features\n→ Programme affiliation\n\nStay tuned ! 🚀\n\nhttps://rapidapi.com/pmouniama/api/ocrfactureapi\n\n#Challenge",
+    "scheduled_at": "2025-12-02 09:00:00",
+    "date_readable": "02/12/2025 à 09h"
+  }
+]
