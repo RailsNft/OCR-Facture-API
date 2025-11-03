@@ -4,7 +4,7 @@
 
 ### 🔴 FICHIERS À SUPPRIMER DU GIT (contiennent secrets/clés)
 
-Ces fichiers contiennent votre secret RapidAPI : `f67eb770-b6b9-11f0-9b0e-0f41c7e962fd`
+Ces fichiers contiennent votre secret RapidAPI en clair
 
 1. **test_ocr_invoice.py** - Contient RAPIDAPI_SECRET en dur
 2. **create_test_invoice.py** - Peut contenir secrets
@@ -79,7 +79,7 @@ git push --force
 ## 🔐 FICHIERS SENSIBLES ANALYSÉS
 
 ### test_ocr_invoice.py
-**Contient** : `RAPIDAPI_SECRET = "f67eb770-b6b9-11f0-9b0e-0f41c7e962fd"`  
+**Contient** : `RAPIDAPI_SECRET = "votre-secret-en-clair"`  
 **Action** : Supprimer du Git, remplacer par variable d'environnement
 
 ### TEST_WITH_CURL.md
@@ -125,7 +125,7 @@ git push origin main
 
 ### 2. Révoquer le secret actuel (IMPORTANT)
 
-Votre secret `f67eb770-b6b9-11f0-9b0e-0f41c7e962fd` est exposé dans Git.
+Votre secret RapidAPI est exposé dans Git.
 
 **Action** :
 1. Allez sur RapidAPI → Votre API → Settings
@@ -137,7 +137,7 @@ Votre secret `f67eb770-b6b9-11f0-9b0e-0f41c7e962fd` est exposé dans Git.
 
 Dans les fichiers que vous gardez, remplacez :
 ```python
-RAPIDAPI_SECRET = "f67eb770-b6b9-11f0-9b0e-0f41c7e962fd"
+RAPIDAPI_SECRET = "votre-secret-ici"
 ```
 
 Par :
