@@ -9,18 +9,55 @@ venv/
 .venv
 *.log
 .DS_Store
+
 # Certificats API Sirene (sécurité)
 *.pem
 *.crt
 *.key
 certs/
 certificates/
+
 # Fichiers avec des identifiants sensibles (à ne pas commiter)
 *_IDENTIFIANTS*.md
 *_EXEMPLE*.md
 *_EXEMPLE*.txt
-QUICK_START_SIRENE.md
-CONFIGURATION_EXEMPLE.md
 MES_IDENTIFIANTS_SIRENE.md
 MON_ENV_EXEMPLE.txt
+CONFIGURATION_EXEMPLE.md
 
+# Fichiers internes de développement (ne pas exposer publiquement)
+DEBUG_*.md
+CORRIGER_*.md
+SOLUTION_*.md
+VERIFICATION_*.md
+VERIFIER_*.md
+STATUT_*.md
+ETAT_*.md
+TEST_API_KEY.md
+RELANCER_*.md
+FIX_*.md
+COPY_*.md
+ADD_*.md
+COMMANDES_RAPIDES.md
+
+# Fichiers de workflow/publication internes
+CONFIGURER_SECRETS_*.md
+CORRECTION_SECRETS_*.md
+PUBLICATION_ETAPE_PAR_ETAPE.md
+PUBLIER_MAINTENANT.md
+SDK_FINALISATION_RESUME.md
+GUIDE_PUBLICATION_SDK.md
+
+# Fichiers temporaires
+*.swp
+*.swo
+*~
+.cursor/
+
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+build/
+*.egg-info/
