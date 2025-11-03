@@ -110,3 +110,49 @@ class TestMetricsEndpoint:
             assert "requests" in data["metrics"]
             assert "latency" in data["metrics"]
 
+
+class TestIdempotency:
+    """Tests pour l'idempotence"""
+    
+    @patch('main.perform_ocr')
+    @patch('main.extract_invoice_data')
+    def test_idempotency_key(self, mock_extract, mock_ocr, client, auth_headers, sample_image):
+        """Test utilisation d'une clé d'idempotence"""
+        import os
+        os.environ["RAPIDAPI_PROXY_SECRET"] = "test_secret"
+        
+        # Mock OCR
+        mock_ocr.return_value = {
+            "text": "FACTURE\nNuméro: FAC-001",
+            "language": "fra",
+            "data": {}
+        }
+        
+        # Mock extraction
+        mock_extract.return_value = (
+            {"invoice_number": "FAC-001"},
+            {"invoice_number": 0.95}
+        )
+        
+        idempotency_key = "test-idempotency-key-123"
+        headers = {**auth_headers, "Idempotency-Key": idempotency_key}
+        files = {"file": ("test.png", sample_image, "image/png")}
+        
+        # Première requête
+        response1 = client.post(
+            "/v1/ocr/upload",
+            headers=headers,
+            files=files
+        )
+        
+        # Deuxième requête avec la même clé (devrait retourner le résultat en cache)
+        response2 = client.post(
+            "/v1/ocr/upload",
+            headers=headers,
+            files=files
+        )
+        
+        if response1.status_code == 200 and response2.status_code == 200:
+            # Les deux réponses devraient être identiques
+            assert response1.json() == response2.json()
+

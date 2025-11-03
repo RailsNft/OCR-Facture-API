@@ -112,3 +112,5 @@ Les fichiers CSS sont modulaires :
 - Pour tester avec une autre clé, videz le localStorage ou utilisez la navigation privée
 - L'interface fonctionne uniquement avec l'API OCR Facture (pas avec d'autres APIs)
 
+
+

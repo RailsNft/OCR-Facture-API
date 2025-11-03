@@ -115,3 +115,5 @@ class TestCacheFunctions:
         assert "redis_available" in info
         assert info["backend_type"] == "MemoryCacheBackend"
 
+
+

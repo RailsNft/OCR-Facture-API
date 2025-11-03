@@ -280,8 +280,26 @@ Optimisé pour le français, support également :
 
 ---
 
+## 🎮 Démo Interactive - Testez Maintenant !
+
+**Aucun code requis !** Testez notre API instantanément avec notre interface web :
+
+👉 **[🎯 Essayer la Démo](https://ocr-facture-api-production.up.railway.app/demo/)**
+
+Fonctionnalités de la démo :
+- Upload d'images ou PDF de factures
+- Visualisation des résultats en temps réel
+- Scores de confiance pour chaque champ
+- Export JSON ou CSV
+- Test de la validation de conformité FR
+
+Il suffit d'entrer votre clé RapidAPI et de commencer à tester !
+
+---
+
 ## 📚 Documentation complète
 
+- **🎮 Démo Interactive** : `https://ocr-facture-api-production.up.railway.app/demo/`
 - **Swagger UI** : `https://ocr-facture-api-production.up.railway.app/docs`
 - **GitHub** : [https://github.com/RailsNft/OCR-Facture-API](https://github.com/RailsNft/OCR-Facture-API)
 - **Support** : Via RapidAPI support
@@ -290,10 +308,11 @@ Optimisé pour le français, support également :
 
 ## 🚀 Démarrage rapide
 
-1. **S'abonner** à l'API sur RapidAPI
-2. **Obtenir votre clé API** dans le dashboard
-3. **Tester** avec le plan Basic (100 req/mois - gratuit)
-4. **Intégrer** dans votre application
+1. **Tester la démo** : Visitez [https://ocr-facture-api-production.up.railway.app/demo/](https://ocr-facture-api-production.up.railway.app/demo/)
+2. **S'abonner** à l'API sur RapidAPI
+3. **Obtenir votre clé API** dans le dashboard
+4. **Tester** avec le plan Basic (100 req/mois - gratuit)
+5. **Intégrer** dans votre application
 
 **Prêt à automatiser votre traitement de factures ?** Abonnez-vous maintenant et commencez à extraire des données en quelques minutes ! 🚀
 

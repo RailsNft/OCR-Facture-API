@@ -261,3 +261,7 @@ pip install opencv-python
 
 **Version 3.0.0** - Prêt pour la production ! 🚀
 
+
+
+
+

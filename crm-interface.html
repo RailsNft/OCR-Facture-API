@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRM Prospection OF/CFA - Bitrix24</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            color: #333;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 1.5rem 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 0.95rem;
+        }
+
+        /* Navigation */
+        .nav {
+            background: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            display: flex;
+            gap: 2rem;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .nav-item {
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+
+        .nav-item:hover {
+            color: #667eea;
+        }
+
+        .nav-item.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 2rem;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            border-left: 4px solid;
+        }
+
+        .stat-card.prospect { border-left-color: #3498db; }
+        .stat-card.qualified { border-left-color: #f39c12; }
+        .stat-card.rdv { border-left-color: #9b59b6; }
+        .stat-card.signed { border-left-color: #27ae60; }
+
+        .stat-card h3 {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-card .number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Filters */
+        .filters {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.3rem;
+        }
+
+        .filter-group label {
+            font-size: 0.85rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        select, input {
+            padding: 0.6rem 1rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 0.95rem;
+            transition: border 0.3s;
+        }
+
+        select:focus, input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn {
+            padding: 0.6rem 1.5rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            align-self: flex-end;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+
+        .btn-success {
+            background: #27ae60;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #229954;
+        }
+
+        /* Pipeline */
+        .pipeline {
+            background: white;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            margin-bottom: 2rem;
+        }
+
+        .pipeline h2 {
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+
+        .pipeline-stages {
+            display: flex;
+            gap: 1rem;
+            overflow-x: auto;
+            padding-bottom: 1rem;
+        }
+
+        .stage {
+            min-width: 280px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .stage-header {
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 2px solid;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .stage.prospect .stage-header { border-bottom-color: #3498db; color: #3498db; }
+        .stage.qualified .stage-header { border-bottom-color: #f39c12; color: #f39c12; }
+        .stage.rdv .stage-header { border-bottom-color: #9b59b6; color: #9b59b6; }
+        .stage.convention .stage-header { border-bottom-color: #e67e22; color: #e67e22; }
+        .stage.signed .stage-header { border-bottom-color: #27ae60; color: #27ae60; }
+
+        .stage-count {
+            background: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+
+        /* Cards */
+        .card {
+            background: white;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-bottom: 0.8rem;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .card-title {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .card-info {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 0.3rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            margin-top: 0.5rem;
+        }
+
+        .badge-qualiopi {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .badge-region {
+            background: #e3f2fd;
+            color: #0d47a1;
+        }
+
+        /* Table View */
+        .table-view {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem;
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .status {
+            padding: 0.3rem 0.8rem;
+            border-radius: 15px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-prospect { background: #d6eaf8; color: #1a5490; }
+        .status-qualified { background: #fdebd0; color: #976509; }
+        .status-rdv { background: #e8daef; color: #633974; }
+        .status-signed { background: #d5f4e6; color: #1e7e34; }
+
+        /* Action Icons */
+        .action-icons {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .icon-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .icon-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .icon-call {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .icon-mail {
+            background: #fff3e0;
+            color: #e65100;
+        }
+
+        .icon-edit {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+
+        /* Dashboard Tabs */
+        .dashboard-tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .tab {
+            padding: 0.8rem 1.5rem;
+            background: white;
+            border-radius: 8px 8px 0 0;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            box-shadow: 0 -2px 5px rgba(0,0,0,0.05);
+        }
+
+        .tab.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .tab:not(.active):hover {
+            background: #f8f9fa;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav {
+                flex-direction: column;
+                gap: 0.5rem;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .pipeline-stages {
+                flex-direction: column;
+            }
+
+            .stage {
+                min-width: 100%;
+            }
+        }
+
+        /* Icons (using emoji as placeholder) */
+        .icon::before {
+            margin-right: 0.3rem;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>🎓 CRM Prospection OF/CFA</h1>
+        <p>Gestion des partenariats avec les organismes de formation sur tout le territoire</p>
+    </div>
+
+    <!-- Navigation -->
+    <div class="nav">
+        <div class="nav-item active">📊 Tableau de bord</div>
+        <div class="nav-item">🔄 Pipeline</div>
+        <div class="nav-item">📋 Liste complète</div>
+        <div class="nav-item">📍 Vue régionale</div>
+        <div class="nav-item">📞 Historique appels</div>
+        <div class="nav-item">⚙️ Configuration</div>
+    </div>
+
+    <!-- Container -->
+    <div class="container">
+        <!-- Dashboard Tabs -->
+        <div class="dashboard-tabs">
+            <div class="tab active">🇫🇷 Vue Nationale</div>
+            <div class="tab">📍 Île-de-France</div>
+            <div class="tab">📍 Auvergne-Rhône-Alpes</div>
+            <div class="tab">📍 Nouvelle-Aquitaine</div>
+            <div class="tab">📍 Autres régions</div>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card prospect">
+                <h3>🔍 Prospection</h3>
+                <div class="number">42</div>
+                <p style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">Nouveaux contacts</p>
+            </div>
+            <div class="stat-card qualified">
+                <h3>✅ Qualifiés</h3>
+                <div class="number">28</div>
+                <p style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">Structures validées</p>
+            </div>
+            <div class="stat-card rdv">
+                <h3>📅 RDV Planifiés</h3>
+                <div class="number">15</div>
+                <p style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">Rendez-vous à venir</p>
+            </div>
+            <div class="stat-card signed">
+                <h3>📝 Signées</h3>
+                <div class="number">8</div>
+                <p style="margin-top: 0.5rem; color: #666; font-size: 0.9rem;">Conventions actives</p>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <label>🔎 Recherche</label>
+                <input type="text" placeholder="Nom, SIRET, ville...">
+            </div>
+            <div class="filter-group">
+                <label>📍 Région</label>
+                <select>
+                    <option>Toutes les régions</option>
+                    <option>Île-de-France</option>
+                    <option>Auvergne-Rhône-Alpes</option>
+                    <option>Nouvelle-Aquitaine</option>
+                    <option>Occitanie</option>
+                    <option>Provence-Alpes-Côte d'Azur</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>🏷️ Type</label>
+                <select>
+                    <option>Tous</option>
+                    <option>Organisme de Formation</option>
+                    <option>CFA</option>
+                    <option>Entreprise</option>
+                </select>
+            </div>
+            <div class="filter-group">
+                <label>⭐ Qualiopi</label>
+                <select>
+                    <option>Tous</option>
+                    <option>Certifié Qualiopi</option>
+                    <option>Non certifié</option>
+                </select>
+            </div>
+            <button class="btn btn-primary">Filtrer</button>
+            <button class="btn btn-success">➕ Nouveau contact</button>
+        </div>
+
+        <!-- Pipeline View -->
+        <div class="pipeline">
+            <h2>🔄 Pipeline de prospection</h2>
+            <div class="pipeline-stages">
+                <!-- Prospection Stage -->
+                <div class="stage prospect">
+                    <div class="stage-header">
+                        <span>🔍 Prospection</span>
+                        <span class="stage-count">42</span>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">FormaPlus Lyon</div>
+                        <div class="card-info">📍 Lyon (69)</div>
+                        <div class="card-info">🏢 SIRET: 123 456 789 00012</div>
+                        <div class="card-info">📞 Dernier appel: 29/10/2025</div>
+                        <span class="badge badge-qualiopi">✓ Qualiopi</span>
+                        <span class="badge badge-region">Auvergne-Rhône-Alpes</span>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">CFA Métiers du Numérique</div>
+                        <div class="card-info">📍 Paris (75)</div>
+                        <div class="card-info">🏢 SIRET: 987 654 321 00045</div>
+                        <div class="card-info">📞 À appeler</div>
+                        <span class="badge badge-qualiopi">✓ Qualiopi</span>
+                        <span class="badge badge-region">Île-de-France</span>
+                    </div>
+                </div>
+
+                <!-- Qualification Stage -->
+                <div class="stage qualified">
+                    <div class="stage-header">
+                        <span>✅ Qualification</span>
+                        <span class="stage-count">28</span>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Institut Formation Pro</div>
+                        <div class="card-info">📍 Bordeaux (33)</div>
+                        <div class="card-info">🏢 SIRET: 456 789 123 00089</div>
+                        <div class="card-info">✉️ Email envoyé: 30/10/2025</div>
+                        <span class="badge badge-qualiopi">✓ Qualiopi</span>
+                        <span class="badge badge-region">Nouvelle-Aquitaine</span>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">École Digitale Marseille</div>
+                        <div class="card-info">📍 Marseille (13)</div>
+                        <div class="card-info">🏢 SIRET: 321 654 987 00056</div>
+                        <div class="card-info">📞 Message vocal reçu</div>
+                        <span class="badge badge-region">PACA</span>
+                    </div>
+                </div>
+
+                <!-- RDV Stage -->
+                <div class="stage rdv">
+                    <div class="stage-header">
+                        <span>📅 RDV Planifié</span>
+                        <span class="stage-count">15</span>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">Campus Innovation Lille</div>
+                        <div class="card-info">📍 Lille (59)</div>
+                        <div class="card-info">🏢 SIRET: 789 123 456 00023</div>
+                        <div class="card-info">📅 RDV: 05/11/2025 14h00</div>
+                        <span class="badge badge-qualiopi">✓ Qualiopi</span>
+                        <span class="badge badge-region">Hauts-de-France</span>
+                    </div>
+                </div>
+
+                <!-- Convention Stage -->
+                <div class="stage convention">
+                    <div class="stage-header">
+                        <span>📄 Convention envoyée</span>
+                        <span class="stage-count">12</span>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">CFA BTP Toulouse</div>
+                        <div class="card-info">📍 Toulouse (31)</div>
+                        <div class="card-info">🏢 SIRET: 147 258 369 00078</div>
+                        <div class="card-info">📤 Envoyé: 28/10/2025</div>
+                        <span class="badge badge-qualiopi">✓ Qualiopi</span>
+                        <span class="badge badge-region">Occitanie</span>
+                    </div>
+                </div>
+
+                <!-- Signed Stage -->
+                <div class="stage signed">
+                    <div class="stage-header">
+                        <span>✅ Signée</span>
+                        <span class="stage-count">8</span>
+                    </div>
+                    <div class="card">
+                        <div class="card-title">FormaTech Paris</div>
+                        <div class="card-info">📍 Paris (75)</div>
+                        <div class="card-info">🏢 SIRET: 963 852 741 00034</div>
+                        <div class="card-info">✅ Signé: 25/10/2025</div>
+                        <span class="badge badge-qualiopi">✓ Qualiopi</span>
+                        <span class="badge badge-region">Île-de-France</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Table View -->
+        <div class="table-view">
+            <h2 style="margin-bottom: 1.5rem;">📋 Liste complète des contacts</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Nom</th>
+                        <th>Type</th>
+                        <th>Région</th>
+                        <th>SIRET</th>
+                        <th>Qualiopi</th>
+                        <th>Statut</th>
+                        <th>Dernier contact</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>FormaPlus Lyon</strong></td>
+                        <td>OF</td>
+                        <td>Auvergne-Rhône-Alpes</td>
+                        <td>123 456 789 00012</td>
+                        <td><span class="badge badge-qualiopi">✓ Oui</span></td>
+                        <td><span class="status status-prospect">Prospection</span></td>
+                        <td>29/10/2025</td>
+                        <td>
+                            <div class="action-icons">
+                                <div class="icon-btn icon-call" title="Appeler">📞</div>
+                                <div class="icon-btn icon-mail" title="Email">✉️</div>
+                                <div class="icon-btn icon-edit" title="Modifier">✏️</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Institut Formation Pro</strong></td>
+                        <td>OF</td>
+                        <td>Nouvelle-Aquitaine</td>
+                        <td>456 789 123 00089</td>
+                        <td><span class="badge badge-qualiopi">✓ Oui</span></td>
+                        <td><span class="status status-qualified">Qualifié</span></td>
+                        <td>30/10/2025</td>
+                        <td>
+                            <div class="action-icons">
+                                <div class="icon-btn icon-call" title="Appeler">📞</div>
+                                <div class="icon-btn icon-mail" title="Email">✉️</div>
+                                <div class="icon-btn icon-edit" title="Modifier">✏️</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Campus Innovation Lille</strong></td>
+                        <td>CFA</td>
+                        <td>Hauts-de-France</td>
+                        <td>789 123 456 00023</td>
+                        <td><span class="badge badge-qualiopi">✓ Oui</span></td>
+                        <td><span class="status status-rdv">RDV planifié</span></td>
+                        <td>31/10/2025</td>
+                        <td>
+                            <div class="action-icons">
+                                <div class="icon-btn icon-call" title="Appeler">📞</div>
+                                <div class="icon-btn icon-mail" title="Email">✉️</div>
+                                <div class="icon-btn icon-edit" title="Modifier">✏️</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>FormaTech Paris</strong></td>
+                        <td>OF</td>
+                        <td>Île-de-France</td>
+                        <td>963 852 741 00034</td>
+                        <td><span class="badge badge-qualiopi">✓ Oui</span></td>
+                        <td><span class="status status-signed">Convention signée</span></td>
+                        <td>25/10/2025</td>
+                        <td>
+                            <div class="action-icons">
+                                <div class="icon-btn icon-call" title="Appeler">📞</div>
+                                <div class="icon-btn icon-mail" title="Email">✉️</div>
+                                <div class="icon-btn icon-edit" title="Modifier">✏️</div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>CFA Métiers du Numérique</strong></td>
+                        <td>CFA</td>
+                        <td>Île-de-France</td>
+                        <td>987 654 321 00045</td>
+                        <td><span class="badge badge-qualiopi">✓ Oui</span></td>
+                        <td><span class="status status-prospect">Prospection</span></td>
+                        <td>28/10/2025</td>
+                        <td>
+                            <div class="action-icons">
+                                <div class="icon-btn icon-call" title="Appeler">📞</div>
+                                <div class="icon-btn icon-mail" title="Email">✉️</div>
+                                <div class="icon-btn icon-edit" title="Modifier">✏️</div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Simulation d'interactivité
+        document.querySelectorAll('.nav-item').forEach(item => {
+            item.addEventListener('click', function() {
+                document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('.card').forEach(card => {
+            card.addEventListener('click', function() {
+                alert('Ouverture de la fiche détaillée du contact');
+            });
+        });
+
+        document.querySelectorAll('.icon-btn').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const action = this.classList.contains('icon-call') ? 'Appel' : 
+                              this.classList.contains('icon-mail') ? 'Email' : 'Modification';
+                alert(`Action: ${action}`);
+            });
+        });
+    </script>
+</body>
+</html>

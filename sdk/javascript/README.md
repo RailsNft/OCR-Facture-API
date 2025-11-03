@@ -1,17 +1,15 @@
 # OCR Facture API - SDK JavaScript/TypeScript
 
-SDK JavaScript/TypeScript officiel pour l'API OCR Facture France. Facilite l'intégration de l'extraction automatique de données de factures dans vos applications Node.js, TypeScript ou JavaScript.
+SDK JavaScript/TypeScript officiel pour l'API OCR Facture France. Facilite l'intégration de l'extraction automatique de données de factures dans vos applications Node.js, React, Vue.js, etc.
 
 ## 🚀 Installation
 
 ```bash
 npm install ocr-facture-api
-```
-
-ou avec yarn:
-
-```bash
+# ou
 yarn add ocr-facture-api
+# ou
+pnpm add ocr-facture-api
 ```
 
 ## 📖 Utilisation
@@ -34,7 +32,9 @@ const api = new OCRFactureAPI(
 
 ```typescript
 // Depuis un fichier local
-const result = await api.extractFromFile('facture.pdf', 'fra');
+const result = await api.extractFromFile('facture.pdf', {
+  language: 'fra'
+});
 
 // Accéder aux données extraites
 const invoiceData = result.extracted_data;
@@ -52,11 +52,12 @@ console.log(`Confiance numéro: ${confidence?.invoice_number}`);
 ```typescript
 import * as fs from 'fs';
 
-const imageData = fs.readFileSync('facture.jpg').toString('base64');
-const result = await api.extractFromBase64(
-  `data:image/jpeg;base64,${imageData}`,
-  'fra'
-);
+const imageBuffer = fs.readFileSync('facture.jpg');
+const base64Data = `data:image/jpeg;base64,${imageBuffer.toString('base64')}`;
+
+const result = await api.extractFromBase64(base64Data, {
+  language: 'fra'
+});
 ```
 
 ### Traitement par lot (batch)
@@ -64,7 +65,7 @@ const result = await api.extractFromBase64(
 ```typescript
 // Traiter plusieurs factures en une requête
 const files = ['facture1.pdf', 'facture2.pdf', 'facture3.pdf'];
-const batchResult = await api.batchExtract(files, 'fra');
+const batchResult = await api.batchExtract(files);
 
 // Parcourir les résultats
 batchResult.results.forEach((result, index) => {
@@ -78,16 +79,18 @@ batchResult.results.forEach((result, index) => {
 
 ```typescript
 // Extraire puis valider
-const result = await api.extractFromFile('facture.pdf', 'fra', true);
+const result = await api.extractFromFile('facture.pdf', {
+  checkCompliance: true
+});
 
 // Ou valider séparément
 const invoiceData = result.extracted_data;
-const compliance = await api.checkCompliance(invoiceData);
+const compliance = await api.checkCompliance(invoiceData!);
 
-if (compliance.compliance.compliant) {
+if (compliance.compliance?.compliance_check?.compliant) {
   console.log('✅ Facture conforme');
 } else {
-  console.log(`❌ Champs manquants: ${compliance.compliance.missing_fields}`);
+  console.log(`❌ Champs manquants: ${compliance.compliance?.compliance_check?.missing_fields}`);
 }
 ```
 
@@ -99,12 +102,33 @@ const result = await api.extractFromFile('facture.pdf');
 const invoiceData = result.extracted_data;
 
 // Générer XML Factur-X
-const facturxResult = await api.generateFacturX(invoiceData);
-const xmlContent = facturxResult.xml;
+const facturXResult = await api.generateFacturX(invoiceData!);
+const xmlContent = facturXResult.xml;
 
 // Sauvegarder le XML
 import * as fs from 'fs';
 fs.writeFileSync('facture_facturx.xml', xmlContent, 'utf-8');
+```
+
+### Validation TVA
+
+```typescript
+const invoiceData = result.extracted_data;
+const vatValidation = await api.validateVAT(invoiceData!);
+
+if (vatValidation.validation?.valid) {
+  console.log('✅ TVA valide');
+} else {
+  console.log(`❌ Erreurs: ${vatValidation.validation?.errors}`);
+}
+```
+
+### Enrichissement SIRET
+
+```typescript
+// Enrichir avec API Sirene
+const enrichment = await api.enrichSIRET('12345678901234');
+console.log(`Raison sociale: ${enrichment.enrichment?.uniteLegale?.denominationUniteLegale}`);
 ```
 
 ### Gestion des erreurs
@@ -139,32 +163,26 @@ import { randomUUID } from 'crypto';
 
 // Utiliser une clé d'idempotence pour éviter les doublons
 const idempotencyKey = randomUUID();
-const result = await api.extractFromFile(
-  'facture.pdf',
-  'fra',
-  false,
+const result = await api.extractFromFile('facture.pdf', {
   idempotencyKey
-);
+});
 
 // Réutiliser la même clé retourne le même résultat sans retraitement
-const result2 = await api.extractFromFile(
-  'facture.pdf',
-  'fra',
-  false,
+const result2 = await api.extractFromFile('facture.pdf', {
   idempotencyKey
-); // Résultat instantané depuis le cache
+}); // Résultat instantané depuis le cache
 ```
 
 ## 📚 API Reference
 
 ### Méthodes principales
 
-- `extractFromFile(filePath, language?, checkCompliance?, idempotencyKey?)` - Extraction depuis fichier
-- `extractFromBase64(base64String, language?, checkCompliance?, idempotencyKey?)` - Extraction depuis base64
-- `batchExtract(files, language?, idempotencyKey?)` - Traitement par lot (max 10 fichiers)
+- `extractFromFile(filePath, options?)` - Extraction depuis fichier
+- `extractFromBase64(base64String, options?)` - Extraction depuis base64
+- `batchExtract(files, options?)` - Traitement par lot (max 10 fichiers)
 - `checkCompliance(invoiceData)` - Validation conformité FR
 - `validateVAT(invoiceData)` - Validation TVA
-- `enrichSiret(siret)` - Enrichissement SIRET
+- `enrichSIRET(siret)` - Enrichissement SIRET
 - `validateVIES(vatNumber)` - Validation VIES
 - `generateFacturX(invoiceData)` - Génération XML Factur-X
 - `parseFacturX(filePath)` - Extraction XML depuis PDF/A-3
@@ -201,7 +219,9 @@ for (const filename of files) {
   if (filename.match(/\.(pdf|jpg|png)$/i)) {
     const filepath = path.join(facturesDir, filename);
     try {
-      const result = await api.extractFromFile(filepath, 'fra', true);
+      const result = await api.extractFromFile(filepath, {
+        checkCompliance: true
+      });
 
       const invoiceData = result.extracted_data;
       console.log(`\n📄 ${filename}`);
@@ -210,33 +230,47 @@ for (const filename of files) {
       console.log(`  Total TTC: ${invoiceData?.total_ttc}€`);
 
       // Vérifier conformité
-      if (result.compliance?.compliant) {
+      if (result.compliance?.compliance_check?.compliant) {
         console.log('  ✅ Conforme');
       } else {
-        console.log(`  ⚠️ Non conforme: ${result.compliance?.missing_fields}`);
+        console.log(`  ⚠️ Non conforme: ${result.compliance?.compliance_check?.missing_fields}`);
       }
     } catch (error) {
-      console.error(`❌ Erreur pour ${filename}: ${error}`);
+      console.error(`❌ Erreur pour ${filename}:`, error);
     }
   }
 }
 ```
 
-### Exemple 2 : Utilisation avec Promises
+### Exemple 2 : Export vers CSV
 
 ```typescript
 import { OCRFactureAPI } from 'ocr-facture-api';
+import * as fs from 'fs';
 
-const api = new OCRFactureAPI('votre_cle_api');
+const api = new OCRFactureAPI('votre_cle');
 
-api
-  .extractFromFile('facture.pdf')
-  .then((result) => {
-    console.log('✅ Succès:', result.extracted_data?.invoice_number);
-  })
-  .catch((error) => {
-    console.error('❌ Erreur:', error.message);
-  });
+// Traiter plusieurs factures
+const files = ['facture1.pdf', 'facture2.pdf', 'facture3.pdf'];
+const batchResult = await api.batchExtract(files);
+
+// Exporter vers CSV
+const csvLines = ['Numéro,Date,Vendeur,Total TTC,Confiance'];
+
+batchResult.results.forEach((result) => {
+  if (result.success && result.extracted_data) {
+    const data = result.extracted_data;
+    csvLines.push([
+      data.invoice_number || '',
+      data.date || '',
+      data.vendor || '',
+      data.total_ttc?.toString() || '',
+      result.confidence_scores?.total_ttc?.toString() || '0',
+    ].join(','));
+  }
+});
+
+fs.writeFileSync('factures_export.csv', csvLines.join('\n'), 'utf-8');
 ```
 
 ## 🔗 Liens utiles
@@ -252,4 +286,3 @@ MIT License
 ## 🤝 Contribution
 
 Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou une pull request.
-

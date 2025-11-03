@@ -77,3 +77,5 @@ const UploadZone = ({ onFileSelect, selectedFile }) => {
 
 export default UploadZone
 
+
+

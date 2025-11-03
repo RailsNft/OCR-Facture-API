@@ -26,3 +26,5 @@ const PreviewImage = ({ previewUrl, fileName }) => {
 
 export default PreviewImage
 
+
+

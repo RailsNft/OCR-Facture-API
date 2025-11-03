@@ -45,3 +45,5 @@ const ConfidenceBar = ({ field, score, compact = false }) => {
 
 export default ConfidenceBar
 
+
+
